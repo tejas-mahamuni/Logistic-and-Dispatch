@@ -1,0 +1,27 @@
+body {
+  background-color: #f9f9f9;
+  font-family: "SF Pro Rounded";
+}
+
+.login-toggle {
+    width: 170px;
+    display: flex;
+    justify-content: space-between;
+
+}
+
+.login-toggle .slider {
+    border: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.login-toggle .slider.active {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+}
+.login-toggle .slider:hover:not(.active) {
+    background-color: #b8b8b8 !important;
+}
+
+
