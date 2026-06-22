@@ -1,50 +1,89 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Vehicle Registration Form</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Management</title>
 
-    <link rel="stylesheet" href="./CSS/style.css">  
+    <link rel="stylesheet" href="./CSS/vehicle.css">
 </head>
 
 <body>
 
-    <div class="container col-11 col-sm-8 col-md-6 col-lg-4 col-xl-4 border rounded-5 p-5 shadow-sm bg-white mt-5">
-        <div class="row">
-            <div class="col">
-                <div class="d-flex justify-content-center mb-3"><h4 class="fw-bolder">Vehicle Registration Form</h4></div>
-                <form>
-                    <div class="mb-3">
-                        <label for="number" class="form-label">Vehicle Number</label>
-                        <input type="text" class="form-control" id="number">
-                    </div>
-                    <div class="mb-3">
-                        <label for="vehicleType" class="form-label">Vehicle Type</label>
-                        <input type="text" class="form-control" id="vehicleType">
-                    </div>
-                    <div class="mb-3">
-                        <label for="capacity" class="form-label">Capacity (kg)</label>
-                        <input type="text" class="form-control" id="capacity">
-                    </div>
+    <div class="vehicle-container">
 
-                    <div class="mb-3 d-flex mx-auto justify-content-center">
-                        <button type="submit" class="btn btn-primary rounded-pill">Register</button>
-                    </div>
-                </form>
+        <h1>Vehicle Management</h1>
+
+        <div class="form-group">
+            <label>Vehicle ID</label>
+
+            <div class="search-box">
+                <input type="number"
+                       id="vehicleId">
+
+                <button type="button"
+                        id="fetchBtn">
+                    Fetch
+                </button>
             </div>
+        </div>
+
+        <div class="form-group">
+            <label>Vehicle Number</label>
+
+            <input type="text"
+                   id="vehicleNumber">
+        </div>
+
+        <div class="form-group">
+            <label>Vehicle Type</label>
+
+            <select id="vehicleType">
+                <option value="">Select Vehicle Type</option>
+                <option>Truck</option>
+                <option>Mini Truck</option>
+                <option>Van</option>
+                <option>Container</option>
+                <option>Tempo</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Capacity (KG)</label>
+
+            <input type="number"
+                   id="capacity">
+        </div>
+
+        <div class="button-group">
+
+            <button id="saveBtn"
+                    class="save-btn">
+                Save
+            </button>
+
+            <button id="updateBtn"
+                    class="update-btn">
+                Update
+            </button>
+
+            <button id="deleteBtn"
+                    class="delete-btn">
+                Delete
+            </button>
+
+            <button id="clearBtn"
+                    class="clear-btn">
+                Clear
+            </button>
 
         </div>
 
     </div>
 
+    <script src="./JS/vehicle.js"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
-        crossorigin="anonymous"></script>
 </body>
 
 </html>

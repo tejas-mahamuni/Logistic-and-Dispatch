@@ -1,0 +1,128 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,sans-serif;
+}
+
+body{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    background:linear-gradient(
+        135deg,
+        #279150,
+        #9face6
+    );
+}
+
+.vehicle-container{
+    width:700px;
+    background:white;
+    padding:35px;
+    border-radius:20px;
+    box-shadow:0 15px 35px rgba(0,0,0,0.2);
+}
+
+.vehicle-container h1{
+    text-align:center;
+    margin-bottom:30px;
+    color:#222;
+}
+
+.form-group{
+    margin-bottom:18px;
+}
+
+.form-group label{
+    display:block;
+    margin-bottom:8px;
+    font-weight:bold;
+    color:#444;
+}
+
+.form-group input,
+.form-group select{
+    width:100%;
+    padding:12px;
+    border:1px solid #ccc;
+    border-radius:8px;
+    outline:none;
+}
+
+.form-group input:focus,
+.form-group select:focus{
+    border-color:#279150;
+}
+
+.search-box{
+    display:flex;
+    gap:10px;
+}
+
+.search-box input{
+    flex:1;
+}
+
+#fetchBtn{
+    width:120px;
+    border:none;
+    border-radius:8px;
+    background:#17a2b8;
+    color:white;
+    cursor:pointer;
+}
+
+#fetchBtn:hover{
+    background:#138496;
+}
+
+.button-group{
+    display:flex;
+    gap:10px;
+    margin-top:25px;
+}
+
+.button-group button{
+    flex:1;
+    border:none;
+    padding:12px;
+    color:white;
+    cursor:pointer;
+    border-radius:8px;
+    font-size:15px;
+}
+
+.save-btn{
+    background:#28a745;
+}
+
+.save-btn:hover{
+    background:#218838;
+}
+
+.update-btn{
+    background:#007bff;
+}
+
+.update-btn:hover{
+    background:#0069d9;
+}
+
+.delete-btn{
+    background:#dc3545;
+}
+
+.delete-btn:hover{
+    background:#c82333;
+}
+
+.clear-btn{
+    background:#6c757d;
+}
+
+.clear-btn:hover{
+    background:#5a6268;
+}
