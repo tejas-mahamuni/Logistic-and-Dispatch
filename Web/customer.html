@@ -8,16 +8,26 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 
-      <link rel="stylesheet" href="./CSS/style.css">  
 </head>
 
 <body>
 
-    <div class="container col-11 col-sm-8 col-md-6 col-lg-4 col-xl-4 border rounded-5 p-5 shadow-sm bg-white mt-5">
+    <div class="container col-11 col-sm-8 col-md-6 col-lg-4 col-xl-4 border rounded-5 p-5 shadow-lg bg-white mt-5">
         <div class="row">
             <div class="col">
-                <div class="d-flex justify-content-center mb-3"><h4 class="fw-bolder">Customer Registration Form</h4></div>
-                <form>
+                <div class="d-flex justify-content-center mb-3"><h4 class="fw-bolder">Customer Management</h4></div>
+                <form id="customer-form">
+    
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label for="id" class="form-label">Customer ID</label>
+                        <div class="d-flex gap-5">
+                            <input type="number" class="form-control" id="id">
+                            <button type="button" class="btn btn-dark rounded-3" id="fetch">Fetch</button>
+                        </div>
+                        </div>
+                    </div>
+
                     <div class="mb-3">
                         <label for="name" class="form-label">Full Name</label>
                         <input type="text" class="form-control" id="name">
@@ -31,8 +41,11 @@
                         <input type="text" class="form-control" id="phone">
                     </div>
 
-                    <div class="mb-3 d-flex mx-auto justify-content-center">
-                        <button type="submit" class="btn btn-primary rounded-pill">Register</button>
+                    <div class="row mb-3 d-flex justify-content-evenly gap-2">
+                        <button type="button" class="col btn btn-primary rounded-pill" id="register">Register</button>
+                        <button type="button" class="col btn btn-warning rounded-pill" id="update">Update</button>
+                        <button type="button" class="col btn btn-danger rounded-pill" id="delete">Delete</button>
+                        <button type="button" class="col btn btn-outline-dark rounded-pill" id="clear">Clear</button>
                     </div>
                 </form>
             </div>
@@ -45,6 +58,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
         crossorigin="anonymous"></script>
+
+    <script src="../JS/customer.js"></script>
 </body>
 
 </html>

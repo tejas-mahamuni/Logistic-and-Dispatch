@@ -1,0 +1,137 @@
+const express = require("express");
+const oracledb = require("oracledb");
+const cors = require("cors");
+const router = express.Router();
+
+const getConnection = require("../db");
+
+router.post("/", async (req, res) => {
+    try {
+        const {customerName, customerAddress, customerPhone} = req.body;
+
+        const connection = await getConnection();
+
+        await connection.execute(
+            `INSERT INTO CUSTOMER(customerName, Address, Phone)
+            VALUES(:1, :2, :3)`, 
+            [customerName, customerAddress, customerPhone],
+            {autoCommit: true}
+        );
+
+
+        res.json({
+            success: true,
+            message: "Customer Added"
+        });
+    }
+    catch(err) {
+        res.status(500).json({
+            success: false,
+            message: "An error occured"
+        })
+    }
+    finally {
+        if (connection) {
+            await connection.close(); 
+        }
+    }
+});
+
+router.get("/:id", async (req, res) => {
+    try {
+        const connection = await getConnection();
+
+        const result = await connection.execute(
+            `SELECT CUSTOMERNAME, ADDRESS, PHONE FROM CUSTOMER WHERE CUSTOMERID = :id`,
+            [req.params.id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                message: "Record not found"
+            })
+        }
+
+        const row = result.rows[0];
+
+        res.json({
+            customerName: row[0],
+            customerAddress: row[1],
+            customerPhone: row[2]
+        });
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({
+                message: "Record not found"
+        });
+    }
+    finally {
+        if (connection) {
+            await connection.close(); 
+        }
+    }
+});
+
+
+router.put("/:id", async (req, res) => {
+
+    const {customerName, customerAddress, customerPhone} = req.body;
+    const connection = await getConnection();
+
+    try {
+        const result = await connection.execute(
+            `UPDATE CUSTOMER SET CUSTOMERNAME = :1, ADDRESS = :2, PHONE = :3 WHERE CUSTOMERID = :4`,
+            [customerName, customerAddress, customerPhone, req.params.id],
+            {autoCommit: true}
+        );
+
+        res.json({
+            success: true,
+            message: `Customer updated with ${req.params.id}`
+        });
+
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({
+            message: "Record not found"
+        });
+    }
+    finally {
+        if (connection) {
+            await connection.close(); 
+        }
+    }
+});
+
+router.delete("/:id", async(req,res) => {
+    try {
+        const connection = await getConnection();
+
+        await connection.execute(
+            `DELETE FROM CUSTOMER WHERE CUSTOMERID = :1`,
+            [req.params.id],
+            {autoCommit: true}
+        );
+
+        res.json({
+            success: true,
+            message: `Customer deleted with ${req.params.id}`
+        });
+
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({
+            message: "Record not found"
+        });
+    }
+    finally {
+        if (connection) {
+            await connection.close(); 
+        }
+    }
+});
+
+module.exports = router;
