@@ -15,11 +15,11 @@ router.post("/", async (req, res) => {
         connection = await getConnection();
 
         await connection.execute(
-            `INSERT INTO CUSTOMER(customerName, Address, Phone)
-            VALUES(:1, :2, :3)`, 
+            `INSERT INTO CUSTOMER(CUSTOMERID, CUSTOMERNAME, ADDRESS, PHONE)
+            VALUES (CUSTOMER_SEQ.nextval, :1, :2, :3)`, 
             [customerName, customerAddress, customerPhone],
             {autoCommit: true}
-        );
+);
 
 
         res.json({

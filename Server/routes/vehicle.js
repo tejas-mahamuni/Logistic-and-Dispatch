@@ -19,31 +19,11 @@ router.post("/", async (req, res) => {
         const conn = await getConnection();
 
         await conn.execute(
-
-            `INSERT INTO VEHICLE
-            (
-                VEHICLENUMBER,
-                VEHICLETYPE,
-                CAPACITY
-            )
-            VALUES
-            (
-                :1,
-                :2,
-                :3
-            )`,
-
-            [
-                vehicleNumber,
-                vehicleType,
-                capacity
-            ],
-
-            {
-                autoCommit: true
-            }
-
-        );
+            `INSERT INTO VEHICLE(VEHICLEID, VEHICLENUMBER, VEHICLETYPE, CAPACITY)
+            VALUES (VEHICLE_SEQ.nextval, :1, :2, :3)`,
+            [vehicleNumber, vehicleType, capacity],
+            { autoCommit: true }
+);
 
         await conn.close();
 

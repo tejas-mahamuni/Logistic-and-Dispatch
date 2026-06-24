@@ -6,13 +6,15 @@ const router = express.Router();
 const getConnection = require("../db");
 
 router.post("/", async (req, res) => {
+    let connection;
     try {
         const {driverName, driverPhone, licenseNumber} = req.body;
 
-        const connection = await getConnection();
+        connection = await getConnection();
+        console.log("Driver insert payload:", { driverName, driverPhone, licenseNumber });
 
         await connection.execute(
-            `INSERT INTO DRIVER(drivername, phone, licensenumber)
+            `INSERT INTO DRIVER(DRIVERNAME, PHONE, LICENSENUMBER)
             VALUES(:1, :2, :3)`, 
             [driverName, driverPhone, licenseNumber],
             {autoCommit: true}
@@ -24,9 +26,10 @@ router.post("/", async (req, res) => {
         });
     }
     catch(err) {
+        console.error("Driver Insert Error:", err);
         res.status(500).json({
             success: false,
-            message: "An error occured"
+            message: err.message || "An error occured"
         })
     }
     finally {
@@ -37,11 +40,12 @@ router.post("/", async (req, res) => {
 });
 
 router.get("/:id", async (req, res) => {
+    let connection;
     try {
-        const connection = await getConnection();
+        connection = await getConnection();
 
         const result = await connection.execute(
-            `SELECT driverName, Phone, licenseNumber FROM DRIVER WHERE DRIVERID = :id`,
+            `SELECT DRIVERNAME, PHONE, LICENSENUMBER FROM DRIVER WHERE DRIVERID = :id`,
             [req.params.id]
         );
 
@@ -107,8 +111,9 @@ router.put("/:id", async (req, res) => {
 });
 
 router.delete("/:id", async(req,res) => {
+    let connection;
     try {
-        const connection = await getConnection();
+        connection = await getConnection();
 
         await connection.execute(
             `DELETE FROM DRIVER WHERE DRIVERID = :1`,

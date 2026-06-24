@@ -24,7 +24,7 @@ router.post("/", async (req, res) => {
              FROM USERS
              WHERE STATUS = 'ACTIVE'
              AND USERNAME = :username AND PASSWORD = :password`,
-            { username },
+            { username, password },
             { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
 
