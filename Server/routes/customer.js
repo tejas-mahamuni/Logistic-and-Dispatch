@@ -15,8 +15,8 @@ router.post("/", async (req, res) => {
         connection = await getConnection();
 
         await connection.execute(
-            `INSERT INTO CUSTOMER(CUSTOMERID, CUSTOMERNAME, ADDRESS, PHONE)
-            VALUES (CUSTOMER_SEQ.nextval, :1, :2, :3)`, 
+            `INSERT INTO CUSTOMER(CUSTOMERNAME, ADDRESS, PHONE)
+            VALUES (:1, :2, :3)`, 
             [customerName, customerAddress, customerPhone],
             {autoCommit: true}
 );
@@ -79,6 +79,90 @@ router.get("/:id", async (req, res) => {
     }
 });
 
+router.get("/next/:id", async (req, res) => {
+
+    let connection;
+
+    try {
+        connection = await getConnection();
+
+        const result = await connection.execute(
+            `SELECT CUSTOMERID, CUSTOMERNAME, ADDRESS, PHONE FROM CUSTOMER WHERE 
+            CUSTOMERID = (SELECT MIN(CUSTOMERID) FROM CUSTOMER WHERE CUSTOMERID > :1)`,
+            [req.params.id]
+        )
+
+        if (!result.rows || result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "No more records found"
+            })
+        }
+
+        const row = result.rows[0];
+
+        res.json({
+            customerId: row[0],
+            customerName: row[1],
+            customerAddress: row[2],
+            customerPhone: row[3]
+        });
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({
+                message: "Record not found"
+        });
+    }
+    finally {
+        if (connection) {
+            await connection.close(); 
+        }
+    }
+});
+
+router.get("/previous/:id", async (req, res) => {
+
+    let connection;
+
+    try {
+        connection = await getConnection();
+
+        const result = await connection.execute(
+            `SELECT CUSTOMERID, CUSTOMERNAME, ADDRESS, PHONE FROM CUSTOMER WHERE
+            CUSTOMERID = (SELECT MAX(CUSTOMERID) FROM CUSTOMER WHERE CUSTOMERID < :1)`,
+            [req.params.id]
+        )
+
+        if (!result.rows || result.rows.length === 0) {
+            return res.status(404).json({
+                success: false,
+                message: "No more records found"
+            });
+        };
+
+        const row = result.rows[0];
+
+        res.json({
+            customerId: row[0],
+            customerName: row[1],
+            customerAddress: row[2],
+            customerPhone: row[3]
+        })
+    }
+    catch (err){
+        return res.status(404).json({
+                success: false,
+                message: "No more records found"
+            });
+    }
+    finally {
+        if (connection) {
+            await connection.close();
+        }
+    }
+});
+
 
 router.put("/:id", async (req, res) => {
 
@@ -114,36 +198,36 @@ router.put("/:id", async (req, res) => {
     }
 });
 
-router.delete("/:id", async(req,res) => {
+// router.delete("/:id", async(req,res) => {
 
-    let connection;
+//     let connection;
 
-    try {
-        connection = await getConnection();
+//     try {
+//         connection = await getConnection();
 
-        await connection.execute(
-            `DELETE FROM CUSTOMER WHERE CUSTOMERID = :1`,
-            [req.params.id],
-            {autoCommit: true}
-        );
+//         await connection.execute(
+//             `DELETE FROM CUSTOMER WHERE CUSTOMERID = :1`,
+//             [req.params.id],
+//             {autoCommit: true}
+//         );
 
-        res.json({
-            success: true,
-            message: `Customer deleted with ${req.params.id}`
-        });
+//         res.json({
+//             success: true,
+//             message: `Customer deleted with ${req.params.id}`
+//         });
 
-    }
-    catch (err) {
-        console.error(err);
-        res.status(500).json({
-            message: "Record not found"
-        });
-    }
-    finally {
-        if (connection) {
-            await connection.close(); 
-        }
-    }
-});
+//     }
+//     catch (err) {
+//         console.error(err);
+//         res.status(500).json({
+//             message: "Record not found"
+//         });
+//     }
+//     finally {
+//         if (connection) {
+//             await connection.close(); 
+//         }
+//     }
+// });
 
 module.exports = router;
