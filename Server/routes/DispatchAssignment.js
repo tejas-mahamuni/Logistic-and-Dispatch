@@ -8,8 +8,7 @@ router.get("/orders", async (req, res) => {
         connection = await getConnection();
 
         const result = await connection.execute(
-            `SELECT ORDERID FROM DISPATCHORDER
-             WHERE ORDERID NOT IN (SELECT ORDERID FROM DISPATCHASSIGNMENT WHERE ORDERID IS NOT NULL)`
+            `SELECT ORDERID FROM DISPATCHORDER`
         );
 
         let htmlString = '<option value="">Select Order</option>';
@@ -87,7 +86,6 @@ router.get("/vehicles", async (req, res) => {
     }
 });
 
-
 router.get("/:id", async (req, res) => {
     let connection;
     try {
@@ -116,7 +114,6 @@ router.get("/:id", async (req, res) => {
         if (connection) await connection.close();
     }
 });
-
 
 router.post("/", async (req, res) => {
     let connection;
