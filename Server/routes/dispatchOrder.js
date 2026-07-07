@@ -22,6 +22,28 @@ router.get("/next-id", async (req, res) => {
 });
 
 
+// ── Load DispatchOrderStatus values from LOV table ──
+router.get("/statuses", async (req, res) => {
+    let connection;
+    try {
+        connection = await getConnection();
+        const result = await connection.execute(
+            `SELECT LOV_VALUE FROM LOV_Master
+              WHERE LOV_TYPE = 'DispatchOrderStatus'
+                AND STATUS   = 'ACTIVE'
+              ORDER BY LOV_ID`
+        );
+        const statuses = (result.rows || []).map(row => row[0]);
+        res.json(statuses);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Unable to fetch dispatch order statuses" });
+    } finally {
+        if (connection) await connection.close();
+    }
+});
+
+
 router.get("/customers", async (req, res) => {
     let connection;
     try {

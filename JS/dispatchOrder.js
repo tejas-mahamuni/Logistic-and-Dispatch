@@ -1,9 +1,11 @@
 /* =========================================================
-   dispatchOrder.js  –  Find / New sliding toggle + full constraints
-   Mirrors vehicle.js architecture exactly.
+   dispatchOrder.js  –  Find / New sliding toggle
+   • Status dropdown loaded from LOV table (DispatchOrderStatus)
+   • All popups/alerts reviewed and placed correctly
+   • 2-column no-scroll layout support
    ========================================================= */
 
-// ── DOM refs ────────────────────────────────────────────────
+// ── DOM refs ──────────────────────────────────────────────────
 const orderId      = document.getElementById("order-id");
 const customerId   = document.getElementById("customer-id");
 const dispatchDate = document.getElementById("dispatch-date");
@@ -20,32 +22,31 @@ const exitBtn     = document.getElementById("exit-btn");
 const modeFindRadio = document.getElementById("mode-find");
 const modeNewRadio  = document.getElementById("mode-new");
 const modeToggle    = document.getElementById("mode-toggle");
-
-// Inline feedback element (small red alert under ID field)
-const idAlert = document.getElementById("id-alert");
+const idAlert       = document.getElementById("id-alert");
 
 const apiBase = "http://127.0.0.1:3000/dispatch-order";
 
-// ── State ───────────────────────────────────────────────────
-let activeRecordId   = null;   // ID of the record currently loaded
-let lastSavedState   = null;   // snapshot of fields after last save/load
-let isDirty          = false;  // true when form differs from lastSavedState
-let currentMode      = "find"; // "find" | "new"
-let newModeSessionId = null;   // ID reserved when entering New mode
-let isNavigating     = false;  // prevents double guardNavigation popup race
+// ── State ─────────────────────────────────────────────────────
+let activeRecordId   = null;
+let lastSavedState   = null;
+let isDirty          = false;
+let currentMode      = "find";
+let newModeSessionId = null;
+let isNavigating     = false;
+let findDebounceTimer = null;
 
-// ── Utilities ───────────────────────────────────────────────
+// ── Utility: deep equality ─────────────────────────────────────
 function deepEqual(a, b) {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
 function getCurrentFormState() {
   return {
-    customerId   : customerId.value.trim(),
-    dispatchDate : dispatchDate.value.trim(),
-    source       : source.value.trim(),
-    destination  : destination.value.trim(),
-    status       : status.value.trim(),
+    customerId  : customerId.value.trim(),
+    dispatchDate: dispatchDate.value.trim(),
+    source      : source.value.trim(),
+    destination : destination.value.trim(),
+    status      : status.value.trim(),
   };
 }
 
@@ -59,7 +60,23 @@ function markClean(state) {
   isDirty = false;
 }
 
-// General auto-dismiss alert
+// ══════════════════════════════════════════════════════════════
+//  POPUP & ALERT GUIDE
+//  ─────────────────────────────────────────────────────────────
+//  showAlert(type, msg)       → auto-dismiss toast (1.8 s)
+//     WHEN: Save success, Update success,
+//           "No changes detected", validation error
+//
+//  showIdAlert(msg)           → small inline red box under Order ID
+//     WHEN: Find mode — typed ID does not exist in DB
+//
+//  Swal.fire (confirmButton)  → blocking popup requiring user action
+//     WHEN: Confirm before Update, Unsaved-changes guard,
+//           Beginning/End of list, Exit with dirty form,
+//           No record loaded when navigating
+// ══════════════════════════════════════════════════════════════
+
+// Auto-dismiss SweetAlert2 toast
 function showAlert(type, message) {
   return Swal.fire({
     position         : "center",
@@ -70,28 +87,22 @@ function showAlert(type, message) {
   });
 }
 
-// ── Inline ID-not-found alert (red box under ID field) ──────
+// Inline red alert under Order ID (Find mode — ID not found)
 function showIdAlert(msg) {
   if (!idAlert) return;
   idAlert.textContent   = msg;
   idAlert.style.display = "block";
 }
-
 function hideIdAlert() {
   if (!idAlert) return;
   idAlert.textContent   = "";
   idAlert.style.display = "none";
 }
 
-// ── Form-mode helpers ────────────────────────────────────────
+// ── Form-mode: show Save or Update button ─────────────────────
 function setFormMode(isUpdate) {
-  if (isUpdate) {
-    saveBtn.style.display   = "none";
-    updateBtn.style.display = "inline-flex";
-  } else {
-    saveBtn.style.display   = "inline-flex";
-    updateBtn.style.display = "none";
-  }
+  saveBtn.style.display   = isUpdate ? "none"        : "inline-flex";
+  updateBtn.style.display = isUpdate ? "inline-flex" : "none";
 }
 
 function clearFields() {
@@ -99,16 +110,16 @@ function clearFields() {
   dispatchDate.value = "";
   source.value       = "";
   destination.value  = "";
-  status.value       = "Pending";
+  // Keep first LOV option (default "Pending") if loaded
+  if (status.options.length > 0) status.selectedIndex = 0;
 }
 
-// ── Slider sizing ────────────────────────────────────────────
+// ── Slider calibration ────────────────────────────────────────
 function calibrateSlider() {
   const findLabel = modeToggle.querySelector("label[for='mode-find']");
   const newLabel  = modeToggle.querySelector("label[for='mode-new']");
   const slider    = modeToggle.querySelector(".slider");
   if (!findLabel || !newLabel || !slider) return;
-
   requestAnimationFrame(() => {
     const fw = findLabel.offsetWidth;
     const nw = newLabel.offsetWidth;
@@ -117,7 +128,6 @@ function calibrateSlider() {
   });
 }
 
-// ── Switch to Find mode (UI only) ───────────────────────────
 function activateFindUI() {
   currentMode = "find";
   modeFindRadio.checked = true;
@@ -127,7 +137,6 @@ function activateFindUI() {
   calibrateSlider();
 }
 
-// ── Switch to New mode (UI only) ────────────────────────────
 function activateNewUI() {
   currentMode = "new";
   modeNewRadio.checked = true;
@@ -137,10 +146,11 @@ function activateNewUI() {
   calibrateSlider();
 }
 
-// ── Apply Find mode actions ─────────────────────────────────
+// ── Find mode: fetch & populate ───────────────────────────────
 async function doFind() {
   const id = orderId.value.trim();
   if (!id) {
+    // POPUP: user pressed Enter without typing an ID
     showAlert("info", "Enter an Order ID to search.");
     return;
   }
@@ -149,29 +159,30 @@ async function doFind() {
     clearFields();
     activeRecordId = null;
     setFormMode(false);
-    showIdAlert(` Order ID "${id}" does not exist.`);
+    // INLINE ALERT (not popup): ID not found in DB
+    showIdAlert(`⚠ Order ID "${id}" does not exist.`);
     return;
   }
   hideIdAlert();
   populateForm(record);
 }
 
-// ── Apply New mode actions ───────────────────────────────────
+// ── New mode: reserve next ID, set today's date ───────────────
 async function doNew() {
   const nextId = await fetchNextOrderId();
-  if (!nextId) { showAlert("error", "Unable to reserve a new Order ID."); return; }
-
+  if (!nextId) {
+    // POPUP: server unable to generate next ID (connection/DB error)
+    showAlert("error", "Unable to reserve a new Order ID.");
+    return;
+  }
   orderId.value    = nextId;
   newModeSessionId = String(nextId);
 
   clearFields();
 
-  // Set today's date as default for Dispatch Date
+  // Default Dispatch Date = today
   const today = new Date();
-  const yyyy  = today.getFullYear();
-  const mm    = String(today.getMonth() + 1).padStart(2, "0");
-  const dd    = String(today.getDate()).padStart(2, "0");
-  dispatchDate.value = `${yyyy}-${mm}-${dd}`;
+  dispatchDate.value = today.toISOString().split("T")[0];
 
   activeRecordId = null;
   setFormMode(false);
@@ -179,87 +190,123 @@ async function doNew() {
   customerId.focus();
 }
 
-// ── Validation ──────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+//  VALIDATION  —  returns false and shows alert on first error
+//  POPUP used for every validation failure (user must acknowledge)
+// ══════════════════════════════════════════════════════════════
 function validateDispatchForm() {
   const cid  = customerId.value.trim();
   const date = dispatchDate.value.trim();
   const src  = source.value.trim();
   const dst  = destination.value.trim();
+  const st   = status.value.trim();
 
-  // Required field checks
+  // ── Required: Customer ─────────────────────────────────────
   if (!cid) {
-    showAlert("error", "Please select a Customer.");
+    Swal.fire({
+      icon : "error", title: "Customer Required",
+      text : "Please select a Customer before saving.",
+      confirmButtonColor: "#5b2e8a",
+    });
     customerId.focus();
     return false;
   }
 
+  // ── Required: Dispatch Date ────────────────────────────────
   if (!date) {
-    showAlert("error", "Dispatch Date is required.");
+    Swal.fire({
+      icon : "error", title: "Dispatch Date Required",
+      text : "Please pick a Dispatch Date.",
+      confirmButtonColor: "#5b2e8a",
+    });
     dispatchDate.focus();
     return false;
   }
 
-  if (!src) {
-    showAlert("error", "Source location is required.");
-    source.focus();
-    return false;
-  }
-
-  if (!dst) {
-    showAlert("error", "Destination is required.");
-    destination.focus();
-    return false;
-  }
-
-  // Length constraint — matches DB VARCHAR(255)
-  if (src.length > 255) {
-    showAlert("error", "Source must not exceed 255 characters.");
-    source.focus();
-    return false;
-  }
-
-  if (dst.length > 255) {
-    showAlert("error", "Destination must not exceed 255 characters.");
-    destination.focus();
-    return false;
-  }
-
-  // Source and Destination must not be the same
-  if (src.toLowerCase() === dst.toLowerCase()) {
-    showAlert("error", "Source and Destination cannot be the same location.");
-    destination.focus();
-    return false;
-  }
-
-  // Date — must not be in the past (for new records)
+  // ── Date must not be in the past (only for NEW records) ────
   if (!activeRecordId) {
-    const selectedDate = new Date(date);
-    const today        = new Date();
+    const selected = new Date(date);
+    const today    = new Date();
     today.setHours(0, 0, 0, 0);
-    if (selectedDate < today) {
-      showAlert("warning", "Dispatch Date cannot be in the past.");
+    if (selected < today) {
+      Swal.fire({
+        icon : "warning", title: "Invalid Date",
+        text : "Dispatch Date cannot be in the past for a new order.",
+        confirmButtonColor: "#d97706",
+      });
       dispatchDate.focus();
       return false;
     }
   }
 
-  // Status constraint — must match allowed values
-  const allowedStatuses = ["Pending", "In Progress", "Completed", "Cancelled"];
-  if (!allowedStatuses.includes(status.value)) {
-    showAlert("error", "Invalid status value selected.");
+  // ── Required: Source ───────────────────────────────────────
+  if (!src) {
+    Swal.fire({
+      icon : "error", title: "Source Required",
+      text : "Please enter the pickup / source location.",
+      confirmButtonColor: "#5b2e8a",
+    });
+    source.focus();
     return false;
   }
 
-  // Business rule: Cannot set Completed/Cancelled if source is empty
-  if ((status.value === "Completed" || status.value === "Cancelled") && !src) {
-    showAlert("warning", `Status "${status.value}" requires a valid Source location.`);
+  // ── Required: Destination ──────────────────────────────────
+  if (!dst) {
+    Swal.fire({
+      icon : "error", title: "Destination Required",
+      text : "Please enter the delivery destination.",
+      confirmButtonColor: "#5b2e8a",
+    });
+    destination.focus();
+    return false;
+  }
+
+  // ── Source ≠ Destination ───────────────────────────────────
+  if (src.toLowerCase() === dst.toLowerCase()) {
+    Swal.fire({
+      icon : "warning", title: "Same Location",
+      text : "Source and Destination cannot be the same place.",
+      confirmButtonColor: "#d97706",
+    });
+    destination.focus();
+    return false;
+  }
+
+  // ── Length constraints (DB VARCHAR 255) ────────────────────
+  if (src.length > 255) {
+    Swal.fire({
+      icon : "error", title: "Source Too Long",
+      text : "Source must not exceed 255 characters.",
+      confirmButtonColor: "#5b2e8a",
+    });
+    source.focus();
+    return false;
+  }
+  if (dst.length > 255) {
+    Swal.fire({
+      icon : "error", title: "Destination Too Long",
+      text : "Destination must not exceed 255 characters.",
+      confirmButtonColor: "#5b2e8a",
+    });
+    destination.focus();
+    return false;
+  }
+
+  // ── Status must be selected ────────────────────────────────
+  if (!st) {
+    Swal.fire({
+      icon : "error", title: "Status Required",
+      text : "Please select a Status for this order.",
+      confirmButtonColor: "#5b2e8a",
+    });
+    status.focus();
     return false;
   }
 
   return true;
 }
 
-// ── API helpers ──────────────────────────────────────────────
+// ── API helpers ───────────────────────────────────────────────
 async function fetchOrderById(id) {
   try {
     const res = await fetch(`${apiBase}/${id}`);
@@ -276,24 +323,55 @@ async function fetchNextOrderId() {
   } catch { return null; }
 }
 
+// Load Customer dropdown from server (NO hardcoded fallback)
 async function loadCustomers() {
   customerId.disabled = true;
   customerId.innerHTML = "<option value=''>Loading customers...</option>";
   try {
     const res = await fetch(`${apiBase}/customers`);
     if (!res.ok) throw new Error();
-    const html = await res.text();
-    customerId.innerHTML = html;
+    customerId.innerHTML = await res.text();
   } catch {
     customerId.innerHTML = "<option value=''>Unable to load customers</option>";
     Swal.fire({
-      icon : "warning",
-      title: "Customer Load Failed",
-      text : "Could not retrieve customer list from server. Please check your connection.",
+      icon : "warning", title: "Customer Load Failed",
+      text : "Could not retrieve the customer list. Check server connection.",
       confirmButtonColor: "#5b2e8a",
     });
   } finally {
     customerId.disabled = false;
+  }
+}
+
+// Load Status dropdown directly from LOV table (DispatchOrderStatus) — NO hardcoded fallback
+async function loadStatuses() {
+  status.disabled = true;
+  status.innerHTML = "<option value=''>Loading statuses...</option>";
+  try {
+    const res = await fetch(`${apiBase}/statuses`);
+    if (!res.ok) throw new Error();
+    const statuses = await res.json();   // array of strings from LOV table
+    if (!Array.isArray(statuses) || statuses.length === 0) {
+      status.innerHTML = "<option value=''>No statuses configured in LOV table</option>";
+      return;
+    }
+    status.innerHTML = "";   // clear loading message
+    statuses.forEach(s => {
+      const opt = document.createElement("option");
+      opt.value = opt.textContent = s;
+      status.appendChild(opt);
+    });
+    status.selectedIndex = 0;   // select first LOV value (Pending)
+  } catch {
+    // No hardcoded fallback — show error and warn user
+    status.innerHTML = "<option value=''>Unable to load statuses</option>";
+    Swal.fire({
+      icon : "warning", title: "Status Load Failed",
+      text : "Could not load status options from the LOV table. Check server connection.",
+      confirmButtonColor: "#5b2e8a",
+    });
+  } finally {
+    status.disabled = false;
   }
 }
 
@@ -306,13 +384,18 @@ function populateForm(record) {
     : "";
   source.value      = record.source      || "";
   destination.value = record.destination || "";
-  status.value      = record.status      || "Pending";
+  status.value      = record.status      || "";
   setFormMode(true);
   markClean();
   hideIdAlert();
 }
 
-// ── Unsaved-changes guard ────────────────────────────────────
+// ══════════════════════════════════════════════════════════════
+//  UNSAVED-CHANGES GUARD
+//  POPUP: shown when user tries to navigate/switch mode with
+//         unsaved edits — offers Save/Update & Continue, Discard,
+//         or Stay Here.
+// ══════════════════════════════════════════════════════════════
 async function guardNavigation(callback) {
   if (isNavigating) return;
   if (!isDirty) { await callback(); return; }
@@ -328,30 +411,29 @@ async function guardNavigation(callback) {
       confirmButtonText: activeRecordId ? "Update & Continue" : "Save & Continue",
       denyButtonText   : "Discard Changes",
       cancelButtonText : "Stay Here",
-      reverseButtons   : false,
+      confirmButtonColor: "#16a34a",
+      denyButtonColor   : "#6b7280",
+      cancelButtonColor : "#5b2e8a",
     });
 
     if (result.isConfirmed) {
-      if (activeRecordId) {
-        const ok = await performUpdate(true);
-        if (!ok) return;
-      } else {
-        const ok = await performSave();
-        if (!ok) return;
-      }
+      const ok = activeRecordId ? await performUpdate(true) : await performSave();
+      if (!ok) return;
       await callback();
     } else if (result.isDenied) {
       markClean();
-      isDirty = false;
       await callback();
     }
-    // else cancelled – stay
+    // cancelled → stay here, do nothing
   } finally {
     isNavigating = false;
   }
 }
 
-// ── Save logic (returns true on success) ─────────────────────
+// ══════════════════════════════════════════════════════════════
+//  SAVE  —  POST new record
+//  POPUP: success toast after save; error popup on failure
+// ══════════════════════════════════════════════════════════════
 async function performSave() {
   if (!validateDispatchForm()) return false;
 
@@ -364,49 +446,74 @@ async function performSave() {
   };
 
   try {
-    const res  = await fetch(`${apiBase}`, {
+    const res  = await fetch(apiBase, {
       method : "POST",
       headers: { "Content-Type": "application/json" },
       body   : JSON.stringify(payload),
     });
     const data = await res.json();
+
     if (!res.ok) {
-      showAlert("error", data.message || "Unable to save dispatch order.");
+      // POPUP: server-returned error (e.g. FK violation, DB down)
+      Swal.fire({
+        icon : "error", title: "Save Failed",
+        text : data.message || "Unable to save dispatch order.",
+        confirmButtonColor: "#dc2626",
+      });
       return false;
     }
 
     const assignedId = data.orderId || orderId.value.trim();
-
-    await showAlert("success", `Order ID ${assignedId} saved! Ready for next entry.`);
-    await doNew(); // reserve next ID and clear fields
+    // POPUP: auto-dismiss success toast
+    await showAlert("success", `Order ID ${assignedId} saved!`);
+    await doNew();
     return true;
   } catch {
-    showAlert("error", "Unable to save dispatch order. Check server connection.");
+    // POPUP: network/connection error
+    Swal.fire({
+      icon : "error", title: "Connection Error",
+      text : "Cannot reach the server. Please check your connection.",
+      confirmButtonColor: "#dc2626",
+    });
     return false;
   }
 }
 
-// ── Update logic (returns true on success) ───────────────────
-// silent = true skips the "Confirm Update?" popup (used from guardNavigation)
+// ══════════════════════════════════════════════════════════════
+//  UPDATE  —  PUT existing record
+//  POPUP (silent=false): "Confirm Update?" before sending
+//  POPUP: success toast after update; error popup on failure
+//  No popup (silent=true): when called from guardNavigation
+// ══════════════════════════════════════════════════════════════
 async function performUpdate(silent = false) {
   const id = orderId.value.trim();
-  if (!id) { showAlert("error", "Enter a valid Order ID to update."); return false; }
+  if (!id) {
+    // POPUP: Update clicked without any record loaded
+    Swal.fire({
+      icon : "error", title: "No Record Selected",
+      text : "Load a record first by entering its Order ID in Find mode.",
+      confirmButtonColor: "#dc2626",
+    });
+    return false;
+  }
+
   if (!validateDispatchForm()) return false;
 
   const current = getCurrentFormState();
 
-  // No actual changes – inform user and treat as success
+  // No actual changes — inform user, treat as success
   if (lastSavedState && deepEqual(current, lastSavedState)) {
+    // POPUP: auto-dismiss info toast — "nothing changed"
     showAlert("info", "No changes detected. Nothing was updated.");
     markClean(current);
     return true;
   }
 
-  // ── Confirmation popup before updating ──────────────────────
   if (!silent) {
+    // POPUP (blocking): explicit confirmation before overwriting DB
     const confirm = await Swal.fire({
       title             : "Confirm Update",
-      html              : `Are you sure you want to update <b>Order ID ${id}</b>?`,
+      html              : `Update <b>Order ID ${id}</b> with the new details?`,
       icon              : "question",
       showCancelButton  : true,
       confirmButtonText : "✔ Yes, Update",
@@ -424,12 +531,20 @@ async function performUpdate(silent = false) {
       body   : JSON.stringify(current),
     });
     const data = await res.json();
-    if (!res.ok) { showAlert("error", data.message || "Unable to update dispatch order."); return false; }
+
+    if (!res.ok) {
+      Swal.fire({
+        icon : "error", title: "Update Failed",
+        text : data.message || "Unable to update the dispatch order.",
+        confirmButtonColor: "#dc2626",
+      });
+      return false;
+    }
 
     activeRecordId = Number(id);
     setFormMode(true);
 
-    // Success popup after update
+    // POPUP: auto-dismiss success toast
     await Swal.fire({
       position         : "center",
       icon             : "success",
@@ -442,22 +557,22 @@ async function performUpdate(silent = false) {
     markClean(current);
     return true;
   } catch {
-    showAlert("error", "Unable to update dispatch order.");
+    Swal.fire({
+      icon : "error", title: "Connection Error",
+      text : "Cannot reach the server. Please try again.",
+      confirmButtonColor: "#dc2626",
+    });
     return false;
   }
 }
 
-// ── Track field changes ──────────────────────────────────────
+// ── Track field changes for dirty flag ───────────────────────
 [customerId, dispatchDate, source, destination, status].forEach(el => {
-  el.addEventListener("input", () => {
-    isDirty = hasUnsavedChanges();
-  });
-  el.addEventListener("change", () => {
-    isDirty = hasUnsavedChanges();
-  });
+  el.addEventListener("input",  () => { isDirty = hasUnsavedChanges(); });
+  el.addEventListener("change", () => { isDirty = hasUnsavedChanges(); });
 });
 
-// ── Mode toggle: Find ↔ New ──────────────────────────────────
+// ══ Mode toggle: Find ↔ New ══════════════════════════════════
 modeFindRadio.addEventListener("change", async () => {
   if (!modeFindRadio.checked) return;
   await guardNavigation(async () => {
@@ -485,9 +600,7 @@ modeNewRadio.addEventListener("change", async () => {
   calibrateSlider();
 });
 
-// ── Order ID field: Enter key ────────────────────────────────
-let findDebounceTimer = null;
-
+// ── Order ID: Enter key ───────────────────────────────────────
 orderId.addEventListener("keydown", async (e) => {
   if (e.key !== "Enter") return;
   e.preventDefault();
@@ -496,11 +609,11 @@ orderId.addEventListener("keydown", async (e) => {
     hideIdAlert();
     await guardNavigation(doFind);
   } else {
-    customerId.focus(); // New mode: jump to first data field
+    customerId.focus();
   }
 });
 
-// ── Order ID: auto-search while typing (Find mode) ──────────
+// ── Order ID: auto-search while typing (Find mode, 400ms) ────
 orderId.addEventListener("input", () => {
   if (currentMode !== "find") return;
   const id = orderId.value.trim();
@@ -519,38 +632,34 @@ orderId.addEventListener("input", () => {
   }, 400);
 });
 
-// ── Order ID: blur triggers search (Find mode) ──────────────
+// ── Order ID: blur also triggers search ──────────────────────
 orderId.addEventListener("blur", async () => {
-  if (currentMode !== "find") return;
-  if (isNavigating) return;
+  if (currentMode !== "find" || isNavigating) return;
   const id = orderId.value.trim();
-  if (!id) return;
-  if (activeRecordId && String(activeRecordId) === id) return;
+  if (!id || (activeRecordId && String(activeRecordId) === id)) return;
   clearTimeout(findDebounceTimer);
   await guardNavigation(doFind);
 });
 
-// ── Save button ──────────────────────────────────────────────
-saveBtn.addEventListener("click", async () => {
-  await performSave();
-});
+// ── Save button ───────────────────────────────────────────────
+saveBtn.addEventListener("click", async () => { await performSave(); });
 
-// ── Update button (with confirm popup) ──────────────────────
-updateBtn.addEventListener("click", async () => {
-  await performUpdate(false); // false = show confirmation popup
-});
+// ── Update button ─────────────────────────────────────────────
+updateBtn.addEventListener("click", async () => { await performUpdate(false); });
 
-// ── Previous button ──────────────────────────────────────────
+// ══ Previous button ══════════════════════════════════════════
+// POPUP (blocking): "Beginning of list" if no previous record exists
+// POPUP (blocking): "No record loaded" if navigating without a record
 previousBtn.addEventListener("click", async () => {
   await guardNavigation(async () => {
-    const idInput = orderId.value.trim();
-    const startId = idInput || (activeRecordId ? String(activeRecordId) : null);
+    const startId = orderId.value.trim() || (activeRecordId ? String(activeRecordId) : null);
 
     if (!startId) {
+      // POPUP: no record loaded, cannot navigate
       await Swal.fire({
         icon             : "info",
         title            : "No Record Loaded",
-        text             : "Please load a dispatch order first before navigating.",
+        text             : "Load a dispatch order first, then use Previous/Next to navigate.",
         confirmButtonText: "OK",
         confirmButtonColor: "#4f46e5",
       });
@@ -560,24 +669,26 @@ previousBtn.addEventListener("click", async () => {
     try {
       const res = await fetch(`${apiBase}/previous/${startId}`);
       if (!res.ok) {
+        // POPUP: already at first record
         await Swal.fire({
           icon              : "warning",
           title             : "Beginning of List",
-          html              : `<p>You are already at the <b>first record</b>.<br>There is no previous data to show.</p>`,
+          html              : `<p>You are already at the <b>first record</b>.<br>There is no previous record to show.</p>`,
           confirmButtonText : "OK",
           confirmButtonColor: "#4f46e5",
-          footer            : `<small>Switch to <b>New</b> mode to add more records.</small>`,
+          footer            : `<small>Switch to <b>New</b> mode to create a new order.</small>`,
         });
         return;
       }
       populateForm(await res.json());
     } catch {
-      showAlert("error", "Unable to load previous dispatch order.");
+      showAlert("error", "Unable to load previous record.");
     }
   });
 });
 
-// ── Next button ──────────────────────────────────────────────
+// ══ Next button ═══════════════════════════════════════════════
+// POPUP (blocking): "End of list" with offer to switch to New mode
 nextBtn.addEventListener("click", async () => {
   await guardNavigation(async () => {
     const id = orderId.value.trim() || "0";
@@ -585,37 +696,38 @@ nextBtn.addEventListener("click", async () => {
     try {
       const res = await fetch(`${apiBase}/next/${id}`);
       if (!res.ok) {
-        await Swal.fire({
+        // POPUP: reached last record — offer to create new one
+        const result = await Swal.fire({
           icon              : "warning",
           title             : "End of List",
-          html              : `<p>You have reached the <b>last record</b>.<br>No more data to show.</p>
+          html              : `<p>You have reached the <b>last record</b>. No more records to show.</p>
                                <p style="margin-top:8px;">Would you like to add a new dispatch order?</p>`,
           showCancelButton  : true,
           confirmButtonText : "Switch to New Mode",
           cancelButtonText  : "Stay Here",
           confirmButtonColor: "#16a34a",
           cancelButtonColor : "#6b7280",
-        }).then(async (result) => {
-          if (result.isConfirmed) {
-            modeNewRadio.checked = true;
-            activateNewUI();
-            orderId.value    = "";
-            newModeSessionId = null;
-            hideIdAlert();
-            await doNew();
-            calibrateSlider();
-          }
         });
+        if (result.isConfirmed) {
+          modeNewRadio.checked = true;
+          activateNewUI();
+          orderId.value    = "";
+          newModeSessionId = null;
+          hideIdAlert();
+          await doNew();
+          calibrateSlider();
+        }
         return;
       }
       populateForm(await res.json());
     } catch {
-      showAlert("error", "Unable to load next dispatch order.");
+      showAlert("error", "Unable to load next record.");
     }
   });
 });
 
-// ── Exit button ──────────────────────────────────────────────
+// ══ Exit button ═══════════════════════════════════════════════
+// POPUP (blocking): warn before leaving if form is dirty
 if (exitBtn) {
   exitBtn.addEventListener("click", async (e) => {
     if (!isDirty) return;
@@ -627,16 +739,16 @@ if (exitBtn) {
       showCancelButton : true,
       confirmButtonText: "Leave",
       cancelButtonText : "Stay",
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor : "#5b2e8a",
     });
-    if (res.isConfirmed) {
-      window.location = exitBtn.href;
-    }
+    if (res.isConfirmed) window.location = exitBtn.href;
   });
 }
 
 // ── Reset form ───────────────────────────────────────────────
 function resetForm() {
-  orderId.value = "";
+  orderId.value  = "";
   clearFields();
   activeRecordId = null;
   isDirty        = false;
@@ -647,7 +759,7 @@ function resetForm() {
 
 // ── Init ─────────────────────────────────────────────────────
 (async function init() {
-  await loadCustomers();
+  await Promise.all([loadCustomers(), loadStatuses()]);
   resetForm();
   activateFindUI();
   setTimeout(calibrateSlider, 50);
