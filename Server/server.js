@@ -6,7 +6,10 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "..")));
+
+app.use(express.static(path.join(__dirname, "../Web")));
+app.use("/JS", express.static(path.join(__dirname, "../JS")));
+app.use("/CSS", express.static(path.join(__dirname, "../CSS")));
 
 app.use("/login", require("./routes/login"));
 app.use("/vehicle", require("./routes/vehicle"));
@@ -18,4 +21,5 @@ app.use("/dispatch-order", require("./routes/dispatchOrder"));
 
 app.listen(3000, () => {
     console.log("Server Running On Port 3000");
+    console.log("http://localhost:3000");
 });
