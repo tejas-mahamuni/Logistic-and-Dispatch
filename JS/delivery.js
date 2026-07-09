@@ -6,12 +6,21 @@ const proofOfDelivery = document.getElementById("proof");
 
 const registerBtn = document.getElementById("register-btn");
 const updateBtn = document.getElementById("update-btn");
-const clearBtn = document.getElementById("clear-btn");
 const prevNext = document.getElementById("prev-next");
 const findBtn = document.getElementById("find-btn");
 const newBtn = document.getElementById("new-btn");
 
 const API_BASE_URL = "http://localhost:3000/delivery";
+let findMode = true;
+
+function setFindMode(isFindMode) {
+    findMode = isFindMode;
+    findBtn.classList.toggle("active", findMode);
+    newBtn.classList.toggle("active", !findMode);
+    if (!findMode) {
+        toggleFormMode(false);
+    }
+}
 
 function toggleFormMode(isUpdateMode) {
     if (isUpdateMode) {
@@ -74,33 +83,55 @@ deliveryId.addEventListener("input", () => {
     const id = deliveryId.value.trim();
     if (!id) {
         clearFields();
-        toggleFormMode(false);
+        if (findMode) {
+            toggleFormMode(false);
+        }
     }
 });
 
-// Find button: fetch by ID when user presses Find
-if (findBtn) {
-    findBtn.addEventListener("click", async () => {
-        const id = deliveryId.value.trim();
-        if (!id) {
-            Swal.fire({ position: "center", icon: "error", title: "Please enter a Delivery ID to find", showConfirmButton: true });
+deliveryId.addEventListener("keydown", async (event) => {
+    if (findMode && event.key === "Enter") {
+        event.preventDefault();
+        await lookupDeliveryById();
+    }
+});
+
+deliveryId.addEventListener("blur", async () => {
+    if (findMode && deliveryId.value.trim()) {
+        await lookupDeliveryById();
+    }
+});
+
+async function lookupDeliveryById() {
+    const id = deliveryId.value.trim();
+    if (!id) {
+        Swal.fire({ position: "center", icon: "error", title: "Please enter a Delivery ID to find", showConfirmButton: true });
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/${id}`);
+        if (!response.ok) {
+            Swal.fire({ position: "center", icon: "error", title: "No delivery found for that ID", showConfirmButton: true });
             return;
         }
+        const data = await response.json();
+        orderId.value = data.orderId || "";
+        deliveryDate.value = data.deliveryDate ? data.deliveryDate.split("T")[0] : "";
+        remarks.value = data.remarks || "";
+        proofOfDelivery.value = data.proofOfDelivery || "";
+        toggleFormMode(true);
+    } catch (err) {
+        console.error(err);
+    }
+}
 
-        try {
-            const response = await fetch(`${API_BASE_URL}/${id}`);
-            if (!response.ok) {
-                Swal.fire({ position: "center", icon: "error", title: "No delivery found for that ID", showConfirmButton: true });
-                return;
-            }
-            const data = await response.json();
-            orderId.value = data.orderId || "";
-            deliveryDate.value = data.deliveryDate ? data.deliveryDate.split("T")[0] : "";
-            remarks.value = data.remarks || "";
-            proofOfDelivery.value = data.proofOfDelivery || "";
-            toggleFormMode(true);
-        } catch (err) {
-            console.error(err);
+// Find button: switch to find mode and automatically lookup later
+if (findBtn) {
+    findBtn.addEventListener("click", () => {
+        setFindMode(true);
+        if (deliveryId.value.trim()) {
+            lookupDeliveryById();
         }
     });
 }
@@ -108,6 +139,7 @@ if (findBtn) {
 // New button: prepare form for a new delivery
 if (newBtn) {
     newBtn.addEventListener("click", async () => {
+        setFindMode(false);
         clearFields();
         const nextId = await getNextDeliveryId();
         if (nextId) deliveryId.value = nextId;
@@ -218,11 +250,6 @@ updateBtn.addEventListener("click", async () => {
             timer: 1500,
         });
     }
-});
-
-clearBtn.addEventListener("click", () => {
-    clearFields();
-    toggleFormMode(false);
 });
 
 document.getElementById("next-btn").addEventListener("click", async () => {
