@@ -223,7 +223,7 @@ document.getElementById("next-btn").addEventListener("click", async () => {
 
     try {
         const response = await fetch(`${API_BASE_URL}/next/${id}`);
-        if (!response.ok) { Swal.fire({ icon: "info", title: "End of dataset reached", confirmButtonColor: "#5b2e8a" }); return; }
+        if (!response.ok) { Swal.fire({ icon: "info", title: "End of list reached", confirmButtonColor: "#5b2e8a" }); return; }
 
         const data = await response.json();
         setFormMode("FIND");
@@ -248,7 +248,7 @@ document.getElementById("previous-btn").addEventListener("click", async () => {
 
     try {
         const response = await fetch(`${API_BASE_URL}/previous/${id}`);
-        if (!response.ok) { Swal.fire({ icon: "info", title: "Beginning of dataset reached", confirmButtonColor: "#5b2e8a" }); return; }
+        if (!response.ok) { Swal.fire({ icon: "info", title: "Beginning of list reached", confirmButtonColor: "#5b2e8a" }); return; }
 
         const data = await response.json();
         setFormMode("FIND");

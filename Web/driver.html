@@ -25,14 +25,6 @@
                 background-color: #5b2e8a;
             }
 
-            button span {
-                display: none;
-            }
-
-            button:hover span {
-                display: inline !important;
-            }
-
             .form-label {
                 font-weight: bold;
             }
@@ -130,20 +122,38 @@
                             </div>
                         </div>
 
-                        <div class="mb-3 d-flex justify-content-center mx-auto gap-3 pt-2">
-                            <button type="button" class="btn btn-warning rounded-3 px-3 fw-bold text-dark" id="action-btn">Update</button>
+                         <div class="mb-2 d-flex justify-content-center mx-auto gap-3 pt-2">
+                            <button type="button" class="btn btn-warning rounded-3 px-4 fw-bold text-dark"
+                                id="action-btn">Update</button>
 
-                            <div class="gap-1 d-flex">
-                                <button type="button" class="btn btn-primary rounded-3 d-inline-flex align-items-center gap-1" id="previous-btn">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-step-back"><path d="M13.971 4.285A2 2 0 0 1 17 6v12a2 2 0 0 1-3.029 1.715l-9.997-5.998a2 2 0 0 1-.003-3.432z" /><path d="M21 20V4" /></svg>
-                                    <span>Previous</span>
+                            <div class="btn-group rounded-pill overflow-hidden gap-1">
+                                <button type="button"
+                                    class="btn btn-primary text-white d-inline-flex align-items-center gap-2"
+                                    id="previous-btn">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="18" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" class="lucide lucide-step-back">
+                                        <path
+                                            d="M13.971 4.285A2 2 0 0 1 17 6v12a2 2 0 0 1-3.029 1.715l-9.997-5.998a2 2 0 0 1-.003-3.432z" />
+                                        <path d="M21 20V4" />
+                                    </svg>
+                                    <span style="display: inline !important; font-weight: bold;">Previous</span>
                                 </button>
-                                <button type="button" class="btn btn-primary rounded-3 d-inline-flex align-items-center gap-1" id="next-btn">
-                                    <span>Next</span>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-step-forward"><path d="M10.029 4.285A2 2 0 0 0 7 6v12a2 2 0 0 0 3.029 1.715l9.997-5.998a2 2 0 0 0 .003-3.432z" /><path d="M3 4v16" /></svg>
+                                <button type="button" class="btn btn-primary text-white d-inline-flex align-items-center gap-2 px-4"
+                                    id="next-btn">
+                                    <span style="display: inline !important; font-weight: bold;">Next</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="18" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" class="lucide lucide-step-forward">
+                                        <path
+                                            d="M10.029 4.285A2 2 0 0 0 7 6v12a2 2 0 0 0 3.029 1.715l9.997-5.998a2 2 0 0 0 .003-3.432z" />
+                                        <path d="M3 4v16" />
+                                    </svg>
                                 </button>
                             </div>
-                            <a href="admin-dashboard.html" class="btn bg-danger-subtle text-danger border border-danger-subtle rounded-3 px-4 d-flex align-items-center">Exit</a>
+
+                            <a href="admin-dashboard.html"
+                                class="btn bg-danger-subtle text-danger border border-danger-subtle rounded-3 px-4 d-flex align-items-center fw-bold">Exit</a>
                         </div>
                     </form>
                 </div>
