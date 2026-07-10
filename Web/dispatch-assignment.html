@@ -16,7 +16,7 @@
 
             .main-form {
                 width: 90vw;
-                height: 90vh; /* Prevents container from stretching past screen limits */
+                height: 90vh; 
                 display: flex;
                 flex-direction: column;
                 align-items: center;
@@ -53,13 +53,12 @@
                 color: #fff;
             }
 
-            .form-control:disabled, .form-select:disabled {
+            .form-control:disabled, .lov-input:disabled {
                 background-color: #e9ecef !important;
                 cursor: not-allowed !important;
                 opacity: 0.8;
             }
 
-            /* Absolute positioning rules prevent layout shifts and structural container stretching */
             #fetch-id-wrapper {
                 position: relative;
                 margin-bottom: 2.5rem !important;
@@ -67,9 +66,9 @@
 
             .custom-alert-box {
                 position: absolute;
-                top: 100%; /* Injects element layer directly below input boundaries */
+                top: 100%; 
                 left: 155px;
-                z-index: 10; /* Places alert on top layer over adjacent form fields */
+                z-index: 10; 
                 border: 1px solid #f5c2c7 !important;
                 background-color: #f8d7da !important;
                 color: #842029 !important;
@@ -81,6 +80,59 @@
                 max-width: 350px;
                 box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
             }
+
+            /* Hides up-down counter spin fields */
+            input[type=number]::-webkit-inner-spin-button, 
+            input[type=number]::-webkit-outer-spin-button { 
+                -webkit-appearance: none; 
+                margin: 0; 
+            }
+            input[type=number] { -moz-appearance: textfield; }
+
+            /* Search Dropdown Layout Overrides */
+            .lov-container {
+                position: relative;
+                width: 250px;
+            }
+            .lov-input {
+                background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+                background-repeat: no-repeat;
+                background-position: right .75rem center;
+                background-size: 16px 12px;
+                cursor: pointer;
+            }
+            .lov-dropdown {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                z-index: 100;
+                background: white;
+                border: 1px solid #ccc;
+                border-radius: 8px;
+                max-height: 220px;
+                overflow-y: auto;
+                display: none;
+                box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+                padding: 8px;
+            }
+            .lov-dropdown.table-wide {
+                width: 520px !important;
+            }
+            .lov-list-item {
+                padding: 6px 12px;
+                cursor: pointer;
+                border-radius: 4px;
+            }
+            .lov-list-item:hover {
+                background-color: #F3EAF9;
+            }
+            .lov-table-row {
+                cursor: pointer;
+            }
+            .lov-table-row:hover {
+                background-color: #F3EAF9 !important;
+            }
         </style>
     </head>
 
@@ -89,18 +141,17 @@
         <div class="main-form border rounded-5 p-5 shadow-lg bg-white mx-auto">
             <div class="row m-0">
                 <div class="col p-0">
-                    <div class="d-flex justify-content-center mb-3">
+                    <div class="d-flex justify-content-center mb-2">
                         <h1 class="main-text fw-bold text-white px-5 py-3 rounded-3 text-center fs-2 shadow-sm">Logistic and Dispatch Management System</h1>
                     </div>
                     <div class="d-flex justify-content-center mb-4">
-                        <h4 class="main-text fw-bold text-white px-5 py-2 rounded-3 text-center fs-3 shadow-sm">Dispatch Assignment Transaction Entry</h4>
+                        <h4 class="main-text fw-bold text-white px-5 py-2 rounded-3 text-center fs-3 shadow-sm">Dispatch Assignment Entry</h4>
                     </div>
 
                     <form id="dispatch-assignment-form">
+                        <div class="mb-5 px-5 py-4 rounded-5 shadow-lg" style="background-color: #F3EAF9;">
 
-                        <div class="mb-4 px-5 py-4 rounded-5 shadow-lg" style="background-color: #F3EAF9;">
-
-                            <div id="fetch-id-wrapper" class="d-flex flex-column mb-4">
+                            <div id="fetch-id-wrapper" class="d-flex flex-column mt-3 mb-5">
                                 <div id="fetch-id" class="d-flex align-items-center text-nowrap gap-3">
                                     <label for="assignment-id" class="form-label mb-0" style="width: 140px;">Assignment ID: <span class="text-danger">*</span></label>
                                     <input type="number" class="form-control" id="assignment-id" style="width: 120px;">
@@ -112,14 +163,19 @@
                                     </div>
                                     <button type="button" class="btn btn-outline-secondary btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;" data-bs-toggle="tooltip" title="Input target ID or use navigation options.">i</button>
                                 </div>
-                                
                                 <div id="id-db-feedback" class="custom-alert-box mt-1"></div>
                             </div>
 
                             <div class="d-flex gap-5 mb-5" style="margin-top: 25px;">
                                 <div class="d-flex align-items-center text-nowrap gap-3">
-                                    <label for="order-id" class="form-label mb-0" style="width: 140px;">Order ID: <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="order-id" style="width: 220px; max-width: 100%;"></select>
+                                    <label class="form-label mb-0" style="width: 140px;">Order ID: <span class="text-danger">*</span></label>
+                                    <div class="lov-container">
+                                        <input type="text" class="form-control lov-input" id="order-id" placeholder="Select Order" readonly>
+                                        <div class="lov-dropdown" id="order-dropdown">
+                                            <input type="text" class="form-control form-control-sm mb-2 lov-search" placeholder="Search Order ID...">
+                                            <div class="lov-list" id="order-list"></div>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="d-flex align-items-center text-nowrap gap-3">
                                     <label for="date-time" class="form-label mb-0" style="width: 100px;">Date :</label>
@@ -127,21 +183,43 @@
                                 </div>
                             </div>
                             
-                            <div class="d-flex gap-5 mb-5">
+                            <div class="d-flex gap-5 mb-4">
                                 <div class="d-flex align-items-center text-nowrap gap-3">
-                                    <label for="driver-id" class="form-label mb-0" style="width: 140px;">Driver ID: <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="driver-id" style="width: 220px; max-width: 100%;"></select>
+                                    <label class="form-label mb-0" style="width: 140px;">Driver ID: <span class="text-danger">*</span></label>
+                                    <div class="lov-container">
+                                        <input type="text" class="form-control lov-input" id="driver-id" placeholder="Select Driver" readonly>
+                                        <div class="lov-dropdown" id="driver-dropdown">
+                                            <input type="text" class="form-control form-control-sm mb-2 lov-search" placeholder="Search Driver...">
+                                            <div class="lov-list" id="driver-list"></div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div class="d-flex align-items-center text-nowrap gap-3">
-                                    <label for="vehicle-id" class="form-label mb-0" style="width: 100px;">Vehicle ID: <span class="text-danger">*</span></label>
-                                    <select class="form-select" id="vehicle-id" style="width: 220px; max-width: 100%;"></select>
+                                    <label class="form-label mb-0" style="width: 100px;">Vehicle ID: <span class="text-danger">*</span></label>
+                                    <div class="lov-container">
+                                        <input type="text" class="form-control lov-input" id="vehicle-id" placeholder="Select Vehicle" readonly>
+                                        <div class="lov-dropdown table-wide" id="vehicle-dropdown">
+                                            <input type="text" class="form-control form-control-sm mb-2 lov-search" placeholder="Search by ID...">
+                                            <table class="table table-sm table-bordered table-striped mt-1 rounded-3 overflow-hidden text-center small">
+                                                <thead class="table-white">
+                                                    <tr>
+                                                        <th>ID</th>
+                                                        <th>Vehicle Number</th>
+                                                        <th>Type</th>
+                                                        <th>Capacity</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="vehicle-table-body"></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="mt-5 mb-2 d-flex justify-content-center mx-auto gap-3 pt-2">
-                            <button type="button" class="btn btn-warning rounded-3 px-5 fw-bold text-dark"
+                        <div class="mb-2 d-flex justify-content-center mx-auto gap-3 pt-2">
+                            <button type="button" class="btn btn-warning rounded-3 px-4 fw-bold text-dark"
                                 id="action-btn">Update</button>
 
                             <div class="btn-group rounded-pill overflow-hidden gap-1">
@@ -173,7 +251,6 @@
                             <a href="admin-dashboard.html"
                                 class="btn bg-danger-subtle text-danger border border-danger-subtle rounded-3 px-4 d-flex align-items-center fw-bold">Exit</a>
                         </div>
-
                     </form>
                 </div>
             </div>

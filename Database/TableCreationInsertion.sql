@@ -127,6 +127,9 @@ VALUES ('DispatchOrderStatus', 'Completed', 'ACTIVE');
 INSERT INTO LOV_MASTER (LOV_TYPE, LOV_VALUE, STATUS)
 VALUES ('DispatchOrderStatus', 'Cancelled', 'ACTIVE');
 
+INSERT INTO LOV_MASTER (LOV_TYPE, LOV_VALUE, STATUS)
+VALUES ('DispatchOrderStatus', 'In Transit', 'ACTIVE');
+
 COMMIT;
 
 select * from LOV_MASTER;
