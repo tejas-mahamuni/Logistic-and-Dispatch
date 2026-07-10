@@ -38,8 +38,8 @@ body {
 
 /* ── Outer card ── */
 .container {
-  width: 96vw;
-  max-width: 1400px;
+  width: 110vw;
+  max-width: 1500px;
   background: #fff;
   border-radius: 16px;
   padding: 44px 64px 38px;
@@ -81,7 +81,7 @@ body {
   background: var(--light-purple);
   border-radius: 12px;
   padding: 22px 30px;
-  width: 85%;
+  width: 90%;
   max-width: 960px;
   margin: 0 auto;
 }
