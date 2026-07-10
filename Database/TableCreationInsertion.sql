@@ -135,6 +135,6 @@ desc vehicle;
 
 delete from vehicle where Vehicleid in (21,22,23,24);
 
-select * from vehicle;
+select * from DISPATCHASSIGNMENT;
 
 
