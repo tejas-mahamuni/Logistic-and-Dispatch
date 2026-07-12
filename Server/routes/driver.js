@@ -86,7 +86,7 @@ router.get("/:id", async (req, res) => {
     try {
         connection = await getConnection();
         const result = await connection.execute(
-            `SELECT DRIVERID, DRIVERNAME, PHONE, LICENSENUMBER FROM DRIVER WHERE DRIVERID = :id`,
+            `SELECT DRIVERNAME, PHONE, LICENSENUMBER FROM DRIVER WHERE DRIVERID = :id`,
             [req.params.id]
         );
 
