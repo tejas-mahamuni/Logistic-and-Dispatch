@@ -6,8 +6,11 @@ import { orderApi } from '../api/orders';
 
 export const ManagerDashboard = () => {
   const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
   const [hubs, setHubs] = useState([]);
-  const [selectedHub, setSelectedHub] = useState(user?.hubId ? String(user.hubId) : '2');
+  const [selectedHub, setSelectedHub] = useState(() => {
+    return user?.hubId ? String(user.hubId) : '2';
+  });
   const [orders, setOrders] = useState([]);
   const [warehouseQueue, setWarehouseQueue] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -93,23 +96,34 @@ export const ManagerDashboard = () => {
           </p>
         </div>
 
-        {/* Hub Filter Selector */}
-        <div className="flex items-center gap-2">
-          <label className="text-xs font-semibold text-slate-600">
-            Current Hub:
-          </label>
-          <select
-            value={selectedHub}
-            onChange={(e) => setSelectedHub(e.target.value)}
-            className="px-3 py-1.5 border border-slate-300 rounded-md text-sm font-medium bg-white text-slate-800 shadow-sm"
-          >
-            {hubs.map((h) => (
-              <option key={h.id} value={h.id}>
-                {h.code} — {h.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        {/* Hub Filter Selector: Admin selects any hub; Manager locked to their facility */}
+        {isAdmin ? (
+          <div className="flex items-center gap-2 bg-white px-3 py-1.5 border border-slate-300 rounded-lg shadow-sm">
+            <label htmlFor="mgr-hub-select" className="text-xs font-bold text-slate-600 whitespace-nowrap">
+              Selected Hub:
+            </label>
+            <select
+              id="mgr-hub-select"
+              value={selectedHub}
+              onChange={(e) => setSelectedHub(e.target.value)}
+              className="text-xs font-bold text-blue-900 bg-transparent focus:outline-none cursor-pointer"
+            >
+              {hubs.map((h) => (
+                <option key={h.id} value={h.id}>
+                  {h.code} — {h.name} {h.hubType === 'WAREHOUSE' ? '(Warehouse)' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-slate-600">Assigned Facility:</span>
+            <span className="px-3 py-1 bg-blue-50 text-blue-800 border border-blue-200 rounded-full text-xs font-bold flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-blue-600"></span>
+              {currentHubName}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* KPI Strip */}
