@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Vehicle Master Entry - Logistic & Dispatch v2</title>
+ <script src="https://cdn.tailwindcss.com"></script>
+ <script>
+ tailwind.config = {
+ theme: {
+ extend: {
+ colors: {
+ primary: '#6003f4',
+ 'primary-soft': '#9069fc',
+ surface: '#ffffff',
+ ink: '#131312',
+ 'ink-muted': '#515150',
+ accent: '#ccee37',
+ danger: '#b90101',
+ success: '#019340',
+ warning: '#f25e25',
+ }
+ }
+ }
+ }
+ </script>
+ <style>
+ @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+ body { font-family: 'Inter', sans-serif; background-color: #f7f6fa; }
+ .times-heading { font-family: 'Times New Roman', Times, serif; font-style: italic; }
+ </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+ <div class="w-full max-w-4xl bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+ <!-- Top App Header -->
+ <div class="bg-primary text-white text-center py-4 px-6">
+ <h1 class="text-xl md:text-2xl font-bold tracking-tight times-heading">Logistic and Dispatch Management System</h1>
+ <p class="text-xs uppercase tracking-widest text-purple-200 font-semibold mt-1">Pune Vehicle Fleet</p>
+ </div>
+
+ <!-- Form Title Banner -->
+ <div class="bg-purple-50 border-b border-purple-100 py-3 px-8 flex justify-between items-center">
+ <div class="flex items-center gap-2.5">
+
+ <h2 class="text-lg font-bold text-primary">Vehicle Master Entry</h2>
+ </div>
+ <span id="mode-badge" class="px-3 py-1 text-xs font-semibold rounded-full bg-purple-100 text-primary border border-purple-200">
+ Mode: Find
+ </span>
+ </div>
+
+ <!-- Form Body -->
+ <form id="vehicle-form" class="p-8 space-y-6">
+ <!-- Mode & ID Field -->
+ <div class="bg-gray-50 border border-gray-200 rounded-lg p-5">
+ <div class="flex flex-wrap items-center gap-4">
+ <label for="vehicleId" class="w-36 text-sm font-bold text-gray-700">
+ Vehicle ID: <span class="text-danger">*</span>
+ </label>
+ <div class="flex items-center gap-3">
+ <input type="number" id="vehicleId" class="w-28 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-primary focus:outline-none" placeholder="ID">
+
+ <!-- Find / New Toggle Pill -->
+ <div class="inline-flex bg-white border border-gray-300 rounded-full p-1 shadow-inner">
+ <button type="button" id="btn-mode-find" class="px-4 py-1 text-xs font-bold rounded-full bg-primary text-white transition-all">Find</button>
+ <button type="button" id="btn-mode-new" class="px-4 py-1 text-xs font-bold rounded-full text-gray-600 hover:text-primary transition-all">New</button>
+ </div>
+ </div>
+ <button type="button" id="btn-fetch" class="px-3 py-1.5 text-xs font-semibold bg-white border border-gray-300 rounded-md hover:bg-gray-100 transition">Fetch Record</button>
+ </div>
+ </div>
+
+ <!-- Vehicle Details Grid -->
+ <div class="space-y-4">
+ <div class="flex flex-col md:flex-row md:items-center gap-2">
+ <label for="registrationNo" class="w-36 text-sm font-bold text-gray-700">
+ Registration No: <span class="text-danger">*</span>
+ </label>
+ <input type="text" id="registrationNo" required class="flex-1 max-w-md px-3 py-2 border border-gray-300 rounded-md text-sm uppercase focus:ring-2 focus:ring-primary focus:outline-none" placeholder="e.g. MH12-EV-1001">
+ </div>
+
+ <div class="flex flex-col md:flex-row md:items-center gap-2">
+ <label for="vehicleType" class="w-36 text-sm font-bold text-gray-700">
+ Vehicle Type: <span class="text-danger">*</span>
+ </label>
+ <select id="vehicleType" required class="flex-1 max-w-md px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-primary focus:outline-none">
+ <option value="">-- Select Type --</option>
+ <option value="BIKE">Two Wheeler (Bike/EV)</option>
+ <option value="SCOOTER">Scooter</option>
+ <option value="THREE_WHEELER">Three Wheeler (Auto Cargo)</option>
+ <option value="MINI_VAN">Mini Van (Tata Ace / Dost)</option>
+ <option value="VAN">Delivery Van</option>
+ <option value="TRUCK">Heavy Truck</option>
+ </select>
+ </div>
+
+ <div class="flex flex-col md:flex-row md:items-center gap-2">
+ <label for="capacityKg" class="w-36 text-sm font-bold text-gray-700">
+ Capacity (kg): <span class="text-danger">*</span>
+ </label>
+ <input type="number" id="capacityKg" step="0.5" min="1" required class="w-40 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-primary focus:outline-none" placeholder="e.g. 35.0">
+ </div>
+
+ <div class="flex flex-col md:flex-row md:items-center gap-2">
+ <label for="hubId" class="w-36 text-sm font-bold text-gray-700">
+ Assigned Hub: <span class="text-danger">*</span>
+ </label>
+ <select id="hubId" required class="flex-1 max-w-md px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-primary focus:outline-none">
+ <option value="">Loading Pune hubs...</option>
+ </select>
+ </div>
+
+ <div class="flex flex-col md:flex-row md:items-center gap-2">
+ <label for="status" class="w-36 text-sm font-bold text-gray-700">
+ Status:
+ </label>
+ <select id="status" class="w-48 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-primary focus:outline-none">
+ <option value="AVAILABLE">AVAILABLE</option>
+ <option value="IN_SERVICE">IN_SERVICE</option>
+ <option value="MAINTENANCE">MAINTENANCE</option>
+ <option value="RETIRED">RETIRED</option>
+ </select>
+ </div>
+ </div>
+
+ <!-- Global Alert Container -->
+ <div id="alert-box" class="hidden p-3 rounded-md text-sm font-medium"></div>
+
+ <!-- Action Controls -->
+ <div class="pt-4 border-t border-gray-200 flex flex-wrap justify-between items-center gap-4">
+ <div class="flex items-center gap-3">
+ <button type="submit" id="btn-action" class="px-6 py-2.5 bg-warning text-ink font-bold rounded-lg shadow-sm hover:brightness-105 transition-all text-sm">
+ Update
+ </button>
+ <button type="button" id="btn-clear" class="px-4 py-2.5 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition text-sm">
+ Clear
+ </button>
+ </div>
+
+ <!-- Previous / Next Navigation Group -->
+ <div class="inline-flex rounded-full border border-gray-300 overflow-hidden shadow-sm">
+ <button type="button" id="btn-prev" class="px-4 py-2 bg-primary text-white text-xs font-bold flex items-center gap-1.5 hover:bg-primary-soft transition">
+ Previous
+ </button>
+ <div class="w-px bg-purple-400"></div>
+ <button type="button" id="btn-next" class="px-4 py-2 bg-primary text-white text-xs font-bold flex items-center gap-1.5 hover:bg-primary-soft transition">
+ Next 
+ </button>
+ </div>
+
+ <a href="index.html" class="px-5 py-2.5 bg-red-50 text-danger border border-red-200 font-bold rounded-lg hover:bg-red-100 transition text-sm flex items-center gap-1.5">
+ Exit
+ </a>
+ </div>
+ </form>
+ </div>
+
+ <!-- Page Logic Script -->
+ <script type="module">
+ import { VehicleApi } from './js/api.js';
+ import { fillHubSelect } from './js/hubs.js';
+
+ let currentMode = 'find';
+
+ const vehicleIdInput = document.getElementById('vehicleId');
+ const btnFind = document.getElementById('btn-mode-find');
+ const btnNew = document.getElementById('btn-mode-new');
+ const btnAction = document.getElementById('btn-action');
+ const modeBadge = document.getElementById('mode-badge');
+ const alertBox = document.getElementById('alert-box');
+
+ const registrationInput = document.getElementById('registrationNo');
+ const typeSelect = document.getElementById('vehicleType');
+ const capacityInput = document.getElementById('capacityKg');
+ const hubSelect = document.getElementById('hubId');
+ const statusSelect = document.getElementById('status');
+
+ // Populate Hubs dropdown via shared helper
+ fillHubSelect(hubSelect);
+
+
+ // Mode toggler
+ btnFind.addEventListener('click', () => setMode('find'));
+ btnNew.addEventListener('click', () => setMode('new'));
+
+ function setMode(mode) {
+ currentMode = mode;
+ hideAlert();
+ if (mode === 'find') {
+ btnFind.className = 'px-4 py-1 text-xs font-bold rounded-full bg-primary text-white transition-all';
+ btnNew.className = 'px-4 py-1 text-xs font-bold rounded-full text-gray-600 hover:text-primary transition-all';
+ btnAction.textContent = 'Update';
+ btnAction.className = 'px-6 py-2.5 bg-warning text-ink font-bold rounded-lg shadow-sm hover:brightness-105 transition text-sm';
+ vehicleIdInput.disabled = false;
+ vehicleIdInput.placeholder = 'ID';
+ modeBadge.textContent = 'Mode: Find';
+ } else {
+ btnNew.className = 'px-4 py-1 text-xs font-bold rounded-full bg-primary text-white transition-all';
+ btnFind.className = 'px-4 py-1 text-xs font-bold rounded-full text-gray-600 hover:text-primary transition-all';
+ btnAction.textContent = 'Save';
+ btnAction.className = 'px-6 py-2.5 bg-success text-white font-bold rounded-lg shadow-sm hover:brightness-105 transition text-sm';
+ vehicleIdInput.value = '';
+ vehicleIdInput.disabled = true;
+ vehicleIdInput.placeholder = 'Auto';
+ modeBadge.textContent = 'Mode: New';
+ clearFields();
+ }
+ }
+
+ document.getElementById('btn-fetch').addEventListener('click', async () => {
+ const id = vehicleIdInput.value.trim();
+ if (!id) return showAlert('Please enter a Vehicle ID to find', 'error');
+ await loadVehicle(id);
+ });
+
+ document.getElementById('btn-prev').addEventListener('click', async () => {
+ const id = vehicleIdInput.value.trim();
+ if (!id) return showAlert('Enter or load a vehicle ID first', 'error');
+ try {
+ const data = await VehicleApi.getPrevious(id);
+ populateForm(data);
+ showAlert(`Loaded previous vehicle ID #${data.id}`, 'info');
+ } catch (err) {
+ showAlert(err.message, 'error');
+ }
+ });
+
+ document.getElementById('btn-next').addEventListener('click', async () => {
+ const id = vehicleIdInput.value.trim();
+ if (!id) return showAlert('Enter or load a vehicle ID first', 'error');
+ try {
+ const data = await VehicleApi.getNext(id);
+ populateForm(data);
+ showAlert(`Loaded next vehicle ID #${data.id}`, 'info');
+ } catch (err) {
+ showAlert(err.message, 'error');
+ }
+ });
+
+ document.getElementById('btn-clear').addEventListener('click', () => {
+ clearFields();
+ hideAlert();
+ });
+
+ // Form Submit
+ document.getElementById('vehicle-form').addEventListener('submit', async (e) => {
+ e.preventDefault();
+ hideAlert();
+
+ const registrationNo = registrationInput.value.trim().toUpperCase().replace(/\s+/g, '-');
+ const vehicleType = typeSelect.value;
+ const capacityKg = parseFloat(capacityInput.value);
+ const hubId = Number(hubSelect.value);
+
+ if (!registrationNo) {
+   showAlert('Vehicle registration number is required (e.g. MH12-EV-1001).', 'error');
+   registrationInput.focus();
+   return;
+ }
+
+ if (!vehicleType) {
+   showAlert('Please select a vehicle type (e.g. BIKE, THREE_WHEELER, MINI_VAN, TRUCK).', 'error');
+   typeSelect.focus();
+   return;
+ }
+
+ if (isNaN(capacityKg) || capacityKg <= 0) {
+   showAlert('Please enter a valid payload capacity in kg (greater than 0).', 'error');
+   capacityInput.focus();
+   return;
+ }
+
+ if (!hubId || isNaN(hubId)) {
+   showAlert('Please select an assigned hub base from the list.', 'error');
+   hubSelect.focus();
+   return;
+ }
+
+ const payload = {
+ registrationNo: registrationNo,
+ vehicleType: vehicleType,
+ capacityKg: capacityKg,
+ hubId: hubId,
+ status: statusSelect.value || 'AVAILABLE'
+ };
+
+ btnAction.disabled = true;
+
+ try {
+ if (currentMode === 'new') {
+ const created = await VehicleApi.create(payload);
+ populateForm(created);
+ setMode('find');
+ showAlert(`Vehicle created successfully! Assigned Vehicle ID #${created.id}`, 'success');
+ } else {
+ const id = vehicleIdInput.value.trim();
+ if (!id) throw new Error('Vehicle ID is required for updating');
+ const updated = await VehicleApi.update(id, payload);
+ populateForm(updated);
+ showAlert(`Vehicle ID #${updated.id} updated successfully!`, 'success');
+ }
+ } catch (err) {
+ showAlert(err.message, 'error');
+ } finally {
+ btnAction.disabled = false;
+ }
+ });
+
+ async function loadVehicle(id) {
+ try {
+ const data = await VehicleApi.get(id);
+ populateForm(data);
+ showAlert(`Vehicle ID #${data.id} loaded.`, 'success');
+ } catch (err) {
+ showAlert(err.message, 'error');
+ }
+ }
+
+ function populateForm(data) {
+ vehicleIdInput.value = data.id;
+ registrationInput.value = data.registrationNo || '';
+ typeSelect.value = data.vehicleType || '';
+ capacityInput.value = data.capacityKg || '';
+ hubSelect.value = data.hubId || '';
+ statusSelect.value = data.status || 'AVAILABLE';
+ }
+
+ function clearFields() {
+ registrationInput.value = '';
+ typeSelect.value = '';
+ capacityInput.value = '';
+ hubSelect.value = '';
+ statusSelect.value = 'AVAILABLE';
+ }
+
+ function showAlert(msg, type = 'info') {
+ alertBox.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700', 'bg-blue-100', 'text-blue-700');
+ if (type === 'error') {
+ alertBox.classList.add('bg-red-100', 'text-red-700', 'border', 'border-red-200');
+ } else if (type === 'success') {
+ alertBox.classList.add('bg-green-100', 'text-green-700', 'border', 'border-green-200');
+ } else {
+ alertBox.classList.add('bg-blue-100', 'text-blue-700', 'border', 'border-blue-200');
+ }
+ alertBox.textContent = msg;
+ }
+
+ function hideAlert() {
+ alertBox.classList.add('hidden');
+ }
+ </script>
+</body>
+</html>

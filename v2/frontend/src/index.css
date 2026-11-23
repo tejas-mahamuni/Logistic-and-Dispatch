@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: #1e293b;
+    background-color: #f8fafc;
+  }
+
+  h1, h2, h3, .heading-v1 {
+    font-family: "Times New Roman", Times, serif;
+    font-style: italic;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+  }
+}
+
+/* Custom v1 card and table utilities */
+.card-v1 {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05);
+}
+
+.table-v1 {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table-v1 th {
+  background-color: #f8fafc;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+}
+
+.table-v1 td {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.875rem;
+  color: #334155;
+}
+
+.table-v1 tbody tr:hover {
+  background-color: #f8fafc;
+}

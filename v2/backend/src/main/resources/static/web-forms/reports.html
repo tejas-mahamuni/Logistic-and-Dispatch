@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Operational Reports &amp; Analytics - Logistic &amp; Dispatch v2</title>
+ <script src="https://cdn.tailwindcss.com"></script>
+ <script>
+ tailwind.config = {
+ theme: {
+ extend: {
+ colors: {
+ primary: '#6003f4',
+ 'primary-soft': '#9069fc',
+ surface: '#ffffff',
+ ink: '#131312',
+ 'ink-muted': '#515150',
+ accent: '#ccee37',
+ danger: '#b90101',
+ success: '#019340',
+ warning: '#f25e25',
+ }
+ }
+ }
+ }
+ </script>
+ <style>
+ @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+ body { font-family: 'Inter', sans-serif; background-color: #f6f7fb; }
+ .times-heading { font-family: 'Times New Roman', Times, serif; font-style: italic; }
+ </style>
+</head>
+<body class="min-h-screen p-4 md:p-6 space-y-6">
+
+ <!-- TopBar matching v1 aesthetic -->
+ <header class="bg-gradient-to-r from-purple-800 to-primary text-white shadow-lg border-b-4 border-purple-400 rounded-xl px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+ <div>
+ <h1 class="text-xl sm:text-2xl font-bold uppercase tracking-wider times-heading">Operational Reports &amp; Intelligence</h1>
+ <p class="text-xs text-purple-200 mt-1 font-medium">Aggregated SQL Views: Pipeline Status, Delays, Driver Efficiency &amp; Fleet Utilization</p>
+ </div>
+ <div class="flex items-center gap-4">
+ <span class="text-xs text-white bg-white/20 font-bold border border-purple-300 rounded-full uppercase px-3 py-1">
+ ROLE: ANALYST / AUDITOR
+ </span>
+ <button type="button" id="btn-refresh" class="inline-flex items-center text-xs text-white bg-white/20 font-bold border border-purple-300 rounded-full uppercase px-3 py-1 hover:bg-white/30 transition gap-1.5">
+
+ Refresh
+ </button>
+ <a href="index.html" class="inline-flex items-center text-xs text-white bg-red-600/80 font-bold border border-red-400 rounded-full uppercase px-3 py-1 hover:bg-red-700 transition gap-1">
+
+ Exit
+ </a>
+ </div>
+ </header>
+
+ <!-- Report Navigation Tabs -->
+ <div class="flex flex-wrap gap-2 border-b pb-1">
+ <button type="button" data-tab="pipeline" class="tab-btn px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-primary text-white shadow-sm">
+ Order Pipeline
+ </button>
+ <button type="button" data-tab="overdue" class="tab-btn px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-white text-gray-700 border hover:bg-gray-50">
+ Overdue Orders
+ </button>
+ <button type="button" data-tab="drivers" class="tab-btn px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-white text-gray-700 border hover:bg-gray-50">
+ Driver Performance
+ </button>
+ <button type="button" data-tab="fleet" class="tab-btn px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-white text-gray-700 border hover:bg-gray-50">
+ Vehicle Utilization
+ </button>
+ </div>
+
+ <!-- Active Report Table Box -->
+ <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm space-y-4">
+ <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b pb-3">
+ <div>
+ <h2 id="report-title" class="font-bold text-gray-900 flex items-center gap-2 text-base">
+ Order Pipeline Summary (v_order_pipeline)
+ </h2>
+ <p id="report-subtitle" class="text-xs text-gray-500 mt-0.5">Live distribution of order volume across hubs and lifecycle statuses</p>
+ </div>
+ <div class="flex items-center gap-2">
+ <button type="button" id="btn-export-csv" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 border rounded-lg text-xs font-bold transition inline-flex items-center gap-1.5">
+ Export CSV
+ </button>
+ </div>
+ </div>
+
+ <div class="overflow-x-auto">
+ <table class="w-full text-xs text-left" id="report-table">
+ <thead id="report-thead" class="bg-gray-50 text-gray-700 font-bold border-b">
+ <!-- Dynamic Headers -->
+ </thead>
+ <tbody id="report-tbody" class="divide-y divide-gray-100">
+ <tr><td class="p-6 text-center text-gray-400">Loading analytical report data...</td></tr>
+ </tbody>
+ </table>
+ </div>
+ </div>
+
+ <script type="module">
+ import { ReportApi } from './js/api.js';
+
+ let currentTab = 'pipeline';
+ let currentData = [];
+
+ const tabButtons = document.querySelectorAll('.tab-btn');
+ const reportTitle = document.getElementById('report-title');
+ const reportSubtitle = document.getElementById('report-subtitle');
+ const thead = document.getElementById('report-thead');
+ const tbody = document.getElementById('report-tbody');
+ const btnRefresh = document.getElementById('btn-refresh');
+ const btnExport = document.getElementById('btn-export-csv');
+
+ const tabConfigs = {
+ pipeline: {
+ title: 'Order Pipeline Summary (v_order_pipeline)',
+ subtitle: 'Order counts grouped by hub and current status',
+ fetch: ReportApi.pipeline,
+ headers: ['Hub ID', 'Current Status', 'Total Order Count'],
+ renderRow: (r) => `
+ <tr class="hover:bg-gray-50 transition">
+ <td class="p-3 font-semibold text-primary">Hub #${r.hub_id || r.hubId}</td>
+ <td class="p-3"><span class="px-2 py-0.5 bg-purple-50 text-purple-700 rounded font-bold">${r.current_status || r.currentStatus}</span></td>
+ <td class="p-3 font-bold text-gray-900">${r.order_count || r.orderCount}</td>
+ </tr>
+ `
+ },
+ overdue: {
+ title: 'Overdue Shipments (v_overdue_orders)',
+ subtitle: 'Active orders past promised delivery date requiring escalation',
+ fetch: ReportApi.overdue,
+ headers: ['Order ID', 'Tracking No', 'Hub ID', 'Current Status', 'Promised Date', 'Days Overdue'],
+ renderRow: (r) => `
+ <tr class="hover:bg-gray-50 transition">
+ <td class="p-3 font-mono">${r.order_id || r.orderId}</td>
+ <td class="p-3 font-bold text-primary">${r.tracking_no || r.trackingNo}</td>
+ <td class="p-3">Hub #${r.hub_id || r.hubId}</td>
+ <td class="p-3"><span class="px-2 py-0.5 bg-rose-50 text-rose-700 rounded font-bold">${r.current_status || r.currentStatus}</span></td>
+ <td class="p-3 font-medium text-gray-600">${r.promised_date || r.promisedDate}</td>
+ <td class="p-3 font-bold text-rose-600">${r.days_overdue || r.daysOverdue} days late</td>
+ </tr>
+ `
+ },
+ drivers: {
+ title: 'Driver Daily Performance (v_driver_daily_performance)',
+ subtitle: 'Stop completion rate, success % and odometer distance per driver',
+ fetch: ReportApi.driverPerformance,
+ headers: ['Driver ID', 'Hub ID', 'Trip Date', 'Trips', 'Total Stops', 'Delivered', 'Failed', 'Success %', 'Distance (km)'],
+ renderRow: (r) => `
+ <tr class="hover:bg-gray-50 transition">
+ <td class="p-3 font-bold text-gray-900">Driver #${r.driver_id || r.driverId}</td>
+ <td class="p-3 text-gray-600">Hub #${r.hub_id || r.hubId}</td>
+ <td class="p-3 font-medium">${r.trip_date || r.tripDate}</td>
+ <td class="p-3 font-bold">${r.trips}</td>
+ <td class="p-3">${r.total_stops || r.totalStops}</td>
+ <td class="p-3 text-green-700 font-bold">${r.delivered_stops || r.deliveredStops}</td>
+ <td class="p-3 text-rose-600">${r.failed_stops || r.failedStops}</td>
+ <td class="p-3 font-bold text-emerald-600">${r.success_pct || r.successPct || 0}%</td>
+ <td class="p-3 font-mono">${r.distance_km || r.distanceKm || 0} km</td>
+ </tr>
+ `
+ },
+ fleet: {
+ title: 'Vehicle Fleet Utilization (v_vehicle_utilization)',
+ subtitle: 'Carried weight vs total capacity load factor across vehicles',
+ fetch: ReportApi.vehicleUtilization,
+ headers: ['Vehicle ID', 'Hub ID', 'Trip Date', 'Trips', 'Carried (kg)', 'Capacity (kg)', 'Avg Load %', 'Distance (km)'],
+ renderRow: (r) => `
+ <tr class="hover:bg-gray-50 transition">
+ <td class="p-3 font-bold text-gray-900">Vehicle #${r.vehicle_id || r.vehicleId}</td>
+ <td class="p-3 text-gray-600">Hub #${r.hub_id || r.hubId}</td>
+ <td class="p-3 font-medium">${r.trip_date || r.tripDate}</td>
+ <td class="p-3 font-bold">${r.trips}</td>
+ <td class="p-3 font-semibold">${r.carried_kg || r.carriedKg} kg</td>
+ <td class="p-3 text-gray-500">${r.capacity_kg || r.capacityKg} kg</td>
+ <td class="p-3 font-bold text-primary">${r.avg_load_pct || r.avgLoadPct || 0}%</td>
+ <td class="p-3 font-mono">${r.distance_km || r.distanceKm || 0} km</td>
+ </tr>
+ `
+ }
+ };
+
+ async function loadReport(tabName) {
+ currentTab = tabName;
+ const cfg = tabConfigs[tabName];
+ reportTitle.innerText = cfg.title;
+ reportSubtitle.innerText = cfg.subtitle;
+
+ // Render table header
+ thead.innerHTML = `<tr>${cfg.headers.map(h => `<th class="p-3">${h}</th>`).join('')}</tr>`;
+ tbody.innerHTML = `<tr><td colspan="${cfg.headers.length}" class="p-6 text-center text-gray-400">Loading data...</td></tr>`;
+
+ try {
+ const res = await cfg.fetch();
+ currentData = Array.isArray(res) ? res : [];
+
+ if (currentData.length === 0) {
+ tbody.innerHTML = `<tr><td colspan="${cfg.headers.length}" class="p-6 text-center text-gray-400">No records found for this view yet.</td></tr>`;
+ } else {
+ tbody.innerHTML = currentData.map(cfg.renderRow).join('');
+ }
+ } catch (err) {
+ tbody.innerHTML = `<tr><td colspan="${cfg.headers.length}" class="p-6 text-center text-rose-500">Failed to load view data: ${err.message}</td></tr>`;
+ }
+ }
+
+ tabButtons.forEach(btn => {
+ btn.addEventListener('click', () => {
+ tabButtons.forEach(b => {
+ b.className = 'tab-btn px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-white text-gray-700 border hover:bg-gray-50';
+ });
+ btn.className = 'tab-btn px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-primary text-white shadow-sm';
+ loadReport(btn.getAttribute('data-tab'));
+ });
+ });
+
+ btnRefresh.addEventListener('click', () => loadReport(currentTab));
+
+ btnExport.addEventListener('click', () => {
+ if (currentData.length === 0) {
+ alert('No data to export.');
+ return;
+ }
+ const keys = Object.keys(currentData[0]);
+ let csv = keys.join(',') + '\n';
+ currentData.forEach(row => {
+ csv += keys.map(k => `"${row[k] ?? ''}"`).join(',') + '\n';
+ });
+ const blob = new Blob([csv], { type: 'text/csv' });
+ const url = URL.createObjectURL(blob);
+ const a = document.createElement('a');
+ a.href = url;
+ a.download = `${currentTab}_report_${Date.now()}.csv`;
+ a.click();
+ URL.revokeObjectURL(url);
+ });
+
+ window.addEventListener('DOMContentLoaded', () => {
+ loadReport('pipeline');
+ });
+ </script>
+</body>
+</html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Dispatcher Live Board - Logistic &amp; Dispatch v2</title>
+ <script src="https://cdn.tailwindcss.com"></script>
+ <script>
+ tailwind.config = {
+ theme: {
+ extend: {
+ colors: {
+ primary: '#6003f4',
+ 'primary-soft': '#9069fc',
+ surface: '#ffffff',
+ ink: '#131312',
+ 'ink-muted': '#515150',
+ accent: '#ccee37',
+ danger: '#b90101',
+ success: '#019340',
+ warning: '#f25e25',
+ }
+ }
+ }
+ }
+ </script>
+ <style>
+ @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+ body { font-family: 'Inter', sans-serif; background-color: #f6f7fb; }
+ .times-heading { font-family: 'Times New Roman', Times, serif; font-style: italic; }
+ </style>
+</head>
+<body class="min-h-screen p-4 md:p-6 space-y-6">
+
+ <!-- TopBar matching v1 aesthetic -->
+ <header class="bg-gradient-to-r from-purple-800 to-primary text-white shadow-lg border-b-4 border-purple-400 rounded-xl px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+ <div>
+ <h1 class="text-xl sm:text-2xl font-bold uppercase tracking-wider times-heading">Dispatcher Live Control Board</h1>
+ <p class="text-xs text-purple-200 mt-1 font-medium">Real-Time Shipment Tracking, Active Trips &amp; Exception Overrides</p>
+ </div>
+ <div class="flex items-center gap-4">
+ <span class="text-xs text-white bg-white/20 font-bold border border-purple-300 rounded-full uppercase px-3 py-1">
+ ROLE: DISPATCHER
+ </span>
+ <button type="button" id="btn-refresh" class="inline-flex items-center text-xs text-white bg-white/20 font-bold border border-purple-300 rounded-full uppercase px-3 py-1 hover:bg-white/30 transition gap-1.5">
+
+ Refresh
+ </button>
+ <a href="index.html" class="inline-flex items-center text-xs text-white bg-red-600/80 font-bold border border-red-400 rounded-full uppercase px-3 py-1 hover:bg-red-700 transition gap-1">
+
+ Exit
+ </a>
+ </div>
+ </header>
+
+ <!-- KPI Strip -->
+ <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+ <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">
+ <div class="flex items-center justify-between text-gray-500 text-xs font-semibold uppercase">
+ <span>In-Transit Trips</span>
+
+ </div>
+ <p id="kpi-in-transit" class="text-2xl font-bold text-ink mt-2">Loading...</p>
+ <span class="text-[11px] text-blue-600 font-medium">Active on Pune roads</span>
+ </div>
+
+ <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">
+ <div class="flex items-center justify-between text-gray-500 text-xs font-semibold uppercase">
+ <span>Out for Delivery</span>
+
+ </div>
+ <p id="kpi-ofd" class="text-2xl font-bold text-ink mt-2">Loading...</p>
+ <span class="text-[11px] text-purple-600 font-medium">Parcels on last mile</span>
+ </div>
+
+ <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">
+ <div class="flex items-center justify-between text-gray-500 text-xs font-semibold uppercase">
+ <span>Delivered Today</span>
+
+ </div>
+ <p id="kpi-delivered" class="text-2xl font-bold text-ink mt-2">Loading...</p>
+ <span class="text-[11px] text-emerald-600 font-medium">OTP verified</span>
+ </div>
+
+ <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">
+ <div class="flex items-center justify-between text-gray-500 text-xs font-semibold uppercase">
+ <span>Exceptions / Overdue</span>
+
+ </div>
+ <p id="kpi-exceptions" class="text-2xl font-bold text-rose-600 mt-2">0</p>
+ <span class="text-[11px] text-rose-500 font-medium">Requires intervention</span>
+ </div>
+ </div>
+
+ <!-- Active Shipments & Live Actions Table -->
+ <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm space-y-4">
+ <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b pb-3">
+ <div>
+ <h2 class="font-bold text-gray-900 flex items-center gap-2">
+
+ Live Shipment Pipeline
+ </h2>
+ <p class="text-xs text-gray-500 mt-0.5">Filter by status, search tracking numbers, or trigger manual status transitions</p>
+ </div>
+ <div class="flex items-center gap-3 w-full sm:w-auto">
+ <div class="relative flex-1 sm:w-64">
+
+ <input type="text" id="input-search" placeholder="Search Tracking # or Name" class="w-full text-xs pl-9 pr-3 py-2 border rounded-lg focus:ring-1 focus:ring-primary focus:outline-none">
+ </div>
+ <select id="filter-status" class="text-xs border rounded-lg px-3 py-2 bg-white text-gray-700 focus:outline-none">
+ <option value="">All Statuses</option>
+ <option value="CREATED">CREATED</option>
+ <option value="AT_HUB">AT_HUB</option>
+ <option value="ASSIGNED">ASSIGNED</option>
+ <option value="OUT_FOR_DELIVERY">OUT_FOR_DELIVERY</option>
+ <option value="DELIVERED">DELIVERED</option>
+ <option value="FAILED_DELIVERY">FAILED_DELIVERY</option>
+ </select>
+ </div>
+ </div>
+
+ <div class="overflow-x-auto">
+ <table class="w-full text-xs text-left">
+ <thead class="bg-gray-50 text-gray-700 font-bold border-b">
+ <tr>
+ <th class="p-3">Tracking No</th>
+ <th class="p-3">Recipient</th>
+ <th class="p-3">Pincode</th>
+ <th class="p-3">Hub</th>
+ <th class="p-3">Payment</th>
+ <th class="p-3">Promised Date</th>
+ <th class="p-3">Current Status</th>
+ <th class="p-3 text-right">Quick Transition</th>
+ </tr>
+ </thead>
+ <tbody id="orders-table-body" class="divide-y divide-gray-100">
+ <tr><td colspan="8" class="p-4 text-center text-gray-400">Loading live shipments...</td></tr>
+ </tbody>
+ </table>
+ </div>
+ </div>
+
+ <script type="module">
+ import { OrderApi, AssignmentApi } from './js/api.js';
+
+ const ordersTableBody = document.getElementById('orders-table-body');
+ const inputSearch = document.getElementById('input-search');
+ const filterStatus = document.getElementById('filter-status');
+ const btnRefresh = document.getElementById('btn-refresh');
+
+ let allOrders = [];
+
+ async function loadDispatcherBoard() {
+ try {
+ const [ordersRes, assignmentsRes] = await Promise.all([
+ OrderApi.list().catch(() => ({ content: [] })),
+ AssignmentApi.list().catch(() => ({ content: [] }))
+ ]);
+
+ allOrders = ordersRes.content || [];
+ const assignments = assignmentsRes.content || [];
+
+ // Update KPIs
+ const inTransitTrips = assignments.filter(t => t.status === 'IN_TRANSIT').length;
+ const ofdOrders = allOrders.filter(o => o.currentStatus === 'OUT_FOR_DELIVERY').length;
+ const deliveredOrders = allOrders.filter(o => o.currentStatus === 'DELIVERED').length;
+ const failedOrders = allOrders.filter(o => o.currentStatus === 'FAILED_DELIVERY').length;
+
+ document.getElementById('kpi-in-transit').innerText = inTransitTrips;
+ document.getElementById('kpi-ofd').innerText = ofdOrders;
+ document.getElementById('kpi-delivered').innerText = deliveredOrders;
+ document.getElementById('kpi-exceptions').innerText = failedOrders;
+
+ renderOrdersTable();
+ } catch (err) {
+ console.error(err);
+ }
+ }
+
+ function renderOrdersTable() {
+ const query = inputSearch.value.toLowerCase().trim();
+ const statusFilter = filterStatus.value;
+
+ const filtered = allOrders.filter(o => {
+ const matchesQuery = !query || 
+ (o.trackingNo && o.trackingNo.toLowerCase().includes(query)) ||
+ (o.recipientName && o.recipientName.toLowerCase().includes(query)) ||
+ (o.deliveryPincode && o.deliveryPincode.includes(query));
+
+ const matchesStatus = !statusFilter || o.currentStatus === statusFilter;
+ return matchesQuery && matchesStatus;
+ });
+
+ if (filtered.length === 0) {
+ ordersTableBody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-gray-400">No shipments found matching filters.</td></tr>`;
+ return;
+ }
+
+ ordersTableBody.innerHTML = filtered.map(o => {
+ const statusColor = {
+ CREATED: 'bg-yellow-100 text-yellow-800',
+ AT_HUB: 'bg-blue-100 text-blue-800',
+ ASSIGNED: 'bg-indigo-100 text-indigo-800',
+ OUT_FOR_DELIVERY: 'bg-purple-100 text-purple-800',
+ DELIVERED: 'bg-green-100 text-green-800',
+ FAILED_DELIVERY: 'bg-rose-100 text-rose-800'
+ }[o.currentStatus] || 'bg-gray-100 text-gray-800';
+
+ return `
+ <tr class="hover:bg-gray-50 transition">
+ <td class="p-3 font-bold text-primary">${o.trackingNo}</td>
+ <td class="p-3">
+ <span class="font-medium text-gray-900 block">${o.recipientName}</span>
+ <span class="text-[11px] text-gray-500">${o.recipientPhone}</span>
+ </td>
+ <td class="p-3 font-mono">${o.deliveryPincode}</td>
+ <td class="p-3 text-gray-600">${o.hubName || 'Hub ' + o.hubId}</td>
+ <td class="p-3">
+ <span class="font-semibold">${o.paymentMode}</span>
+ ${o.paymentMode === 'COD' ? `<span class="text-gray-500 block text-[11px]">₹${o.codAmount}</span>` : ''}
+ </td>
+ <td class="p-3 text-gray-600">${o.promisedDate || '—'}</td>
+ <td class="p-3">
+ <span class="px-2 py-0.5 rounded font-bold text-[10px] ${statusColor}">${o.currentStatus}</span>
+ </td>
+ <td class="p-3 text-right">
+ <select data-order-id="${o.id}" class="select-status-transition text-[11px] border rounded px-2 py-1 bg-white font-semibold text-gray-700 focus:outline-none">
+ <option value="" disabled selected>Change Status ▾</option>
+ <option value="AT_HUB">Mark AT_HUB</option>
+ <option value="OUT_FOR_DELIVERY">Mark OUT_FOR_DELIVERY</option>
+ <option value="DELIVERED">Mark DELIVERED</option>
+ <option value="FAILED_DELIVERY">Mark FAILED</option>
+ </select>
+ </td>
+ </tr>
+ `;
+ }).join('');
+
+ // Bind transition events
+ document.querySelectorAll('.select-status-transition').forEach(sel => {
+ sel.addEventListener('change', async (e) => {
+ const orderId = e.target.getAttribute('data-order-id');
+ const newStatus = e.target.value;
+ if (newStatus) {
+ try {
+ await OrderApi.updateStatus(orderId, newStatus);
+ loadDispatcherBoard();
+ } catch (err) {
+ alert('Failed to update status: ' + err.message);
+ }
+ }
+ });
+ });
+
+ }
+
+ inputSearch.addEventListener('input', renderOrdersTable);
+ filterStatus.addEventListener('change', renderOrdersTable);
+ btnRefresh.addEventListener('click', loadDispatcherBoard);
+
+ window.addEventListener('DOMContentLoaded', () => {
+ loadDispatcherBoard();
+ });
+ </script>
+</body>
+</html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Admin Dashboard - Logistic & Dispatch v2</title>
+ <script src="https://cdn.tailwindcss.com"></script>
+ <script>
+ tailwind.config = {
+ theme: {
+ extend: {
+ colors: {
+ primary: '#6003f4',
+ 'primary-soft': '#9069fc',
+ surface: '#ffffff',
+ ink: '#131312',
+ 'ink-muted': '#515150',
+ accent: '#ccee37',
+ danger: '#b90101',
+ success: '#019340',
+ warning: '#f25e25',
+ }
+ }
+ }
+ }
+ </script>
+ <style>
+ @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+ body { font-family: 'Inter', sans-serif; background-color: #f6f7fb; }
+ .times-heading { font-family: 'Times New Roman', Times, serif; font-style: italic; }
+ </style>
+</head>
+<body class="min-h-screen p-4 md:p-6 space-y-6">
+
+ <!-- TopBar matching v1 aesthetic -->
+ <header class="bg-gradient-to-r from-purple-800 to-primary text-white shadow-lg border-b-4 border-purple-400 rounded-xl px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+ <div>
+ <h1 class="text-xl sm:text-2xl font-bold uppercase tracking-wider times-heading">Admin System Overview</h1>
+ <p class="text-xs text-purple-200 mt-1 font-medium">Pune Regional Infrastructure, Multi-Hub Fleet &amp; Users</p>
+ </div>
+ <div class="flex items-center gap-4">
+ <span class="text-xs text-white bg-white/20 font-bold border border-purple-300 rounded-full uppercase px-3 py-1">
+ ROLE: ADMIN
+ </span>
+ <button type="button" onclick="window.location.reload()" class="inline-flex items-center text-xs text-white bg-white/20 font-bold border border-purple-300 rounded-full uppercase px-3 py-1 hover:bg-white/30 transition gap-1.5">
+
+ Refresh
+ </button>
+ <a href="index.html" class="inline-flex items-center text-xs text-white bg-red-600/80 font-bold border border-red-400 rounded-full uppercase px-3 py-1 hover:bg-red-700 transition gap-1">
+
+ Exit
+ </a>
+ </div>
+ </header>
+
+ <!-- KPI Strip -->
+ <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+ <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">
+ <div class="flex items-center justify-between text-gray-500 text-xs font-semibold uppercase">
+ <span>Active Delivery Hubs</span>
+
+ </div>
+ <p id="kpi-hubs" class="text-2xl font-bold text-ink mt-2">5 Hubs + 1 WH</p>
+ <span class="text-[11px] text-green-600 font-medium">100% Operational</span>
+ </div>
+
+ <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">
+ <div class="flex items-center justify-between text-gray-500 text-xs font-semibold uppercase">
+ <span>Fleet Vehicles</span>
+
+ </div>
+ <p id="kpi-vehicles" class="text-2xl font-bold text-ink mt-2">6 Active</p>
+ <span class="text-[11px] text-gray-500 font-medium">EV Bikes, 3W, Mini Vans</span>
+ </div>
+
+ <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">
+ <div class="flex items-center justify-between text-gray-500 text-xs font-semibold uppercase">
+ <span>Rostered Drivers</span>
+
+ </div>
+ <p id="kpi-drivers" class="text-2xl font-bold text-ink mt-2">3 Rostered</p>
+ <span class="text-[11px] text-gray-500 font-medium">Available for dispatch</span>
+ </div>
+
+ <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">
+ <div class="flex items-center justify-between text-gray-500 text-xs font-semibold uppercase">
+ <span>Total Intaked Orders</span>
+
+ </div>
+ <p id="kpi-orders" class="text-2xl font-bold text-primary mt-2">Loading...</p>
+ <span class="text-[11px] text-gray-500 font-medium">Across all Pune zones</span>
+ </div>
+ </div>
+
+ <!-- Main Content Tables (Clean Boxes matching v1) -->
+ <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+ <!-- Hubs Table -->
+ <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm space-y-3">
+ <div class="flex justify-between items-center border-b pb-2">
+ <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wide flex items-center gap-1.5">
+
+ Pune Hub Network Status
+ </h2>
+ <span class="text-xs text-gray-400">Live</span>
+ </div>
+ <div class="overflow-x-auto">
+ <table class="w-full text-xs text-left">
+ <thead class="bg-purple-50 text-purple-900 uppercase font-bold border-b border-purple-100">
+ <tr>
+ <th class="py-2.5 px-3">Code</th>
+ <th class="py-2.5 px-3">Hub Name</th>
+ <th class="py-2.5 px-3">Type</th>
+ <th class="py-2.5 px-3">Pincode</th>
+ </tr>
+ </thead>
+ <tbody id="hubs-table-body" class="divide-y divide-gray-100">
+ <tr><td colspan="4" class="text-center py-4 text-gray-400">Loading hubs...</td></tr>
+ </tbody>
+ </table>
+ </div>
+ </div>
+
+ <!-- Recent Orders Table -->
+ <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm space-y-3">
+ <div class="flex justify-between items-center border-b pb-2">
+ <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wide flex items-center gap-1.5">
+
+ Recent Inbound Orders
+ </h2>
+ <a href="dispatch-order.html" class="text-xs font-bold text-primary hover:underline">New Order +</a>
+ </div>
+ <div class="overflow-x-auto">
+ <table class="w-full text-xs text-left">
+ <thead class="bg-purple-50 text-purple-900 uppercase font-bold border-b border-purple-100">
+ <tr>
+ <th class="py-2.5 px-3">ID</th>
+ <th class="py-2.5 px-3">Tracking</th>
+ <th class="py-2.5 px-3">Recipient</th>
+ <th class="py-2.5 px-3">Pincode</th>
+ <th class="py-2.5 px-3">Status</th>
+ </tr>
+ </thead>
+ <tbody id="orders-table-body" class="divide-y divide-gray-100">
+ <tr><td colspan="5" class="text-center py-4 text-gray-400">Loading orders...</td></tr>
+ </tbody>
+ </table>
+ </div>
+ </div>
+ </div>
+
+ <!-- Active Fleet Inventory Box -->
+ <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm space-y-3">
+ <div class="flex justify-between items-center border-b pb-2">
+ <h2 class="text-sm font-bold text-gray-800 uppercase tracking-wide flex items-center gap-1.5">
+
+ Active Fleet Inventory
+ </h2>
+ <a href="vehicle.html" class="text-xs font-bold text-primary hover:underline">Manage Fleet &rarr;</a>
+ </div>
+ <div class="overflow-x-auto">
+ <table class="w-full text-xs text-left">
+ <thead class="bg-purple-50 text-purple-900 uppercase font-bold border-b border-purple-100">
+ <tr>
+ <th class="py-2.5 px-3">ID</th>
+ <th class="py-2.5 px-3">Reg. Number</th>
+ <th class="py-2.5 px-3">Category</th>
+ <th class="py-2.5 px-3">Capacity (kg)</th>
+ <th class="py-2.5 px-3">Assigned Hub</th>
+ <th class="py-2.5 px-3">Status</th>
+ </tr>
+ </thead>
+ <tbody id="vehicles-table-body" class="divide-y divide-gray-100">
+ <tr><td colspan="6" class="text-center py-4 text-gray-400">Loading fleet...</td></tr>
+ </tbody>
+ </table>
+ </div>
+ </div>
+
+ <script type="module">
+ import { HubApi, OrderApi, VehicleApi } from './js/api.js';
+
+ async function initDashboard() {
+ try {
+ // Load Hubs
+ const hubs = await HubApi.list();
+ const hubBody = document.getElementById('hubs-table-body');
+ hubBody.innerHTML = '';
+ hubs.forEach(h => {
+ const row = document.createElement('tr');
+ row.className = 'hover:bg-gray-50';
+ row.innerHTML = `
+ <td class="py-2 px-3 font-mono font-bold text-primary">${h.code}</td>
+ <td class="py-2 px-3 font-medium">${h.name}</td>
+ <td class="py-2 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${h.hubType === 'WAREHOUSE' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'}">${h.hubType}</span></td>
+ <td class="py-2 px-3">${h.pincode}</td>
+ `;
+ hubBody.appendChild(row);
+ });
+
+ // Load Orders
+ const ordersPage = await OrderApi.list();
+ const orders = ordersPage.content || ordersPage;
+ document.getElementById('kpi-orders').textContent = `${orders.length} Orders`;
+ const orderBody = document.getElementById('orders-table-body');
+ orderBody.innerHTML = '';
+ if (orders.length === 0) {
+ orderBody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-gray-400">No orders yet. Use Dispatch Order Entry to create one.</td></tr>';
+ } else {
+ orders.slice(0, 5).forEach(o => {
+ const row = document.createElement('tr');
+ row.className = 'hover:bg-gray-50';
+ row.innerHTML = `
+ <td class="py-2 px-3 font-bold">#${o.id}</td>
+ <td class="py-2 px-3 font-mono text-primary font-semibold">${o.trackingNo}</td>
+ <td class="py-2 px-3">${o.recipientName}</td>
+ <td class="py-2 px-3">${o.deliveryPincode}</td>
+ <td class="py-2 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-primary">${o.currentStatus}</span></td>
+ `;
+ orderBody.appendChild(row);
+ });
+ }
+
+ // Load Vehicles
+ const vehiclesPage = await VehicleApi.list();
+ const vehicles = vehiclesPage.content || vehiclesPage;
+ const vehicleBody = document.getElementById('vehicles-table-body');
+ vehicleBody.innerHTML = '';
+ vehicles.forEach(v => {
+ const row = document.createElement('tr');
+ row.className = 'hover:bg-gray-50';
+ row.innerHTML = `
+ <td class="py-2 px-3 font-bold">#${v.id}</td>
+ <td class="py-2 px-3 font-mono font-bold">${v.registrationNo}</td>
+ <td class="py-2 px-3">${v.vehicleType}</td>
+ <td class="py-2 px-3">${v.capacityKg} kg</td>
+ <td class="py-2 px-3">${v.hubName || `Hub ID: ${v.hubId}`}</td>
+ <td class="py-2 px-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-800">${v.status}</span></td>
+ `;
+ vehicleBody.appendChild(row);
+ });
+
+ } catch (err) {
+ console.error('Failed to load admin dashboard data:', err);
+ }
+ }
+
+ initDashboard();
+ </script>
+</body>
+</html>

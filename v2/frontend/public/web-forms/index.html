@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Logistic &amp; Dispatch Management System</title>
+ <script src="https://cdn.tailwindcss.com"></script>
+ <script>
+ tailwind.config = {
+ theme: {
+ extend: {
+ colors: {
+ primary: '#6003f4',
+ 'primary-soft': '#9069fc',
+ surface: '#ffffff',
+ ink: '#131312',
+ 'ink-muted': '#515150',
+ accent: '#ccee37',
+ danger: '#b90101',
+ success: '#019340',
+ warning: '#f25e25',
+ }
+ }
+ }
+ }
+ </script>
+ <style>
+ @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+ body { font-family: 'Inter', sans-serif; background-color: #f6f7fb; }
+ .times-heading { font-family: 'Times New Roman', Times, serif; font-style: italic; }
+
+ /* Column accent colors matching v1 design */
+ .col-c1 { border-color: #b8d5f0; }
+ .hdr-c1 { background-color: #3b82c4; }
+ .alt-c1 { background-color: #f1f7fd; }
+
+ .col-c2 { border-color: #b3d9bc; }
+ .hdr-c2 { background-color: #3a7d44; }
+ .alt-c2 { background-color: #f0f8f2; }
+
+ .col-c3 { border-color: #d4bff5; }
+ .hdr-c3 { background-color: #6003f4; }
+ .alt-c3 { background-color: #f6f0fe; }
+
+ .col-c4 { border-color: #f0c99a; }
+ .hdr-c4 { background-color: #b45a1a; }
+ .alt-c4 { background-color: #fdf6ee; }
+
+ .col-c5 { border-color: #9fd8d5; }
+ .hdr-c5 { background-color: #1e7b78; }
+ .alt-c5 { background-color: #eef8f8; }
+ </style>
+</head>
+<body class="min-h-screen p-4 md:p-6 flex flex-col justify-between">
+
+ <div class="max-w-7xl mx-auto w-full space-y-5">
+ <!-- Top Unified Header matching v1 with Times New Roman Italic -->
+ <header class="bg-gradient-to-r from-primary via-purple-700 to-indigo-800 text-white rounded-xl py-4 px-8 text-center shadow-lg border-b-4 border-primary-soft">
+ <h1 class="text-2xl md:text-3xl font-bold tracking-tight times-heading">Logistic and Dispatch Management System</h1>
+ <p class="text-xs md:text-sm text-purple-200 mt-1 font-medium tracking-wide">
+ Centralized Logistics &amp; Last-Mile Dispatch Management
+ </p>
+ </header>
+
+ <!-- KPI Strip -->
+ <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+ <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">
+ <div class="flex items-center justify-between">
+ <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Operational Hubs</span>
+ </div>
+ <p class="text-xl md:text-2xl font-bold text-ink mt-1">Distribution Centers</p>
+ <p class="text-xs text-green-600 font-semibold mt-1 flex items-center gap-1">
+ <span class="w-2 h-2 rounded-full bg-green-500 inline-block"></span> Fully Operational
+ </p>
+ </div>
+
+ <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">
+ <div class="flex items-center justify-between">
+ <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Pincode Coverage</span>
+ </div>
+ <p class="text-xl md:text-2xl font-bold text-primary mt-1">Service Zones</p>
+ <p class="text-xs text-gray-500 mt-1">Dedicated Postal Delivery Routes</p>
+ </div>
+
+ <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">
+ <div class="flex items-center justify-between">
+ <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Active Fleet</span>
+ </div>
+ <p class="text-xl md:text-2xl font-bold text-ink mt-1">Last-Mile Vehicles</p>
+ <p class="text-xs text-gray-500 mt-1">Bikes, Cargo, Vans</p>
+ </div>
+
+ <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">
+ <div class="flex items-center justify-between">
+ <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Daily Throughput</span>
+ </div>
+ <p class="text-xl md:text-2xl font-bold text-teal-700 mt-1">Parcels Handled</p>
+ <p class="text-xs text-gray-500 mt-1">Automated Pipeline Routing</p>
+ </div>
+ </div>
+
+ <!-- 5-Column Grid -->
+ <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+
+ <!-- Column 1: Master Entry -->
+ <div class="bg-white border-2 col-c1 rounded-xl overflow-hidden shadow-sm flex flex-col">
+ <div class="hdr-c1 text-white py-2 px-3 text-xs font-extrabold uppercase tracking-wider flex items-center justify-between">
+ <span>Master Entry</span>
+ <span class="opacity-80 text-[10px]">Forms</span>
+ </div>
+ <div class="divide-y divide-gray-100 flex-1 text-xs">
+ <a href="customer.html" class="block p-3 hover:bg-blue-50 transition group">
+ <span class="font-bold text-blue-900 group-hover:text-primary block">Customer Master</span>
+ <span class="text-gray-500 text-[11px] block mt-0.5">Manage customer directory</span>
+ </a>
+ <a href="driver.html" class="block p-3 alt-c1 hover:bg-blue-50 transition group">
+ <span class="font-bold text-blue-900 group-hover:text-primary block">Driver Master</span>
+ <span class="text-gray-500 text-[11px] block mt-0.5">License &amp; driver capacity</span>
+ </a>
+ <a href="vehicle.html" class="block p-3 hover:bg-blue-50 transition group">
+ <span class="font-bold text-blue-900 group-hover:text-primary block">Vehicle Master</span>
+ <span class="text-gray-500 text-[11px] block mt-0.5">Capacity &amp; fleet management</span>
+ </a>
+ <a href="dispatch-order.html" class="block p-3 alt-c1 hover:bg-blue-50 transition group">
+ <span class="font-bold text-blue-900 group-hover:text-primary block">Dispatch Order Entry</span>
+ <span class="text-gray-500 text-[11px] block mt-0.5">Order intake &amp; address details</span>
+ </a>
+ <a href="dispatch-assignment.html" class="block p-3 hover:bg-blue-50 transition group">
+ <span class="font-bold text-blue-900 group-hover:text-primary block">Dispatch Assignment</span>
+ <span class="text-gray-500 text-[11px] block mt-0.5">Assign pending orders to drivers</span>
+ </a>
+ </div>
+ </div>
+
+ <!-- Column 2: Operations -->
+ <div class="bg-white border-2 col-c2 rounded-xl overflow-hidden shadow-sm flex flex-col">
+ <div class="hdr-c2 text-white py-2 px-3 text-xs font-extrabold uppercase tracking-wider flex items-center justify-between">
+ <span>Operations</span>
+ <span class="opacity-80 text-[10px]">Active</span>
+ </div>
+ <div class="divide-y divide-gray-100 flex-1 text-xs">
+ <a href="dispatch-assignment.html" class="block p-3 hover:bg-green-50 transition group">
+ <span class="font-bold text-green-950 group-hover:text-green-700 block">Dispatch Assignment</span>
+ <span class="text-gray-500 text-[11px] block mt-0.5">Assign orders to vehicles &amp; drivers</span>
+ </a>
+ <a href="dispatch-order.html" class="block p-3 alt-c2 hover:bg-green-50 transition group">
+ <span class="font-bold text-green-950 group-hover:text-green-700 block">Order Intake</span>
+ <span class="text-gray-500 text-[11px] block mt-0.5">Smart customer intake &amp; booking</span>
+ </a>
+ <div class="p-3 text-gray-400">
+ <span class="font-bold block">Hub Operations</span>
+ <span class="text-[11px] block mt-0.5">Inbound scan &amp; sorting</span>
+ </div>
+ <div class="p-3 alt-c2 text-gray-400">
+ <span class="font-bold block">Delivery Handover</span>
+ <span class="text-[11px] block mt-0.5">Last-mile driver delivery</span>
+ </div>
+ </div>
+ </div>
+
+ <!-- Column 3: Dashboards -->
+ <div class="bg-white border-2 col-c3 rounded-xl overflow-hidden shadow-sm flex flex-col">
+ <div class="hdr-c3 text-white py-2 px-3 text-xs font-extrabold uppercase tracking-wider flex items-center justify-between">
+ <span>Dashboards</span>
+ <span class="opacity-80 text-[10px]">Role-Based</span>
+ </div>
+ <div class="divide-y divide-gray-100 flex-1 text-xs">
+ <a href="dashboard-admin.html" class="block p-3 hover:bg-purple-50 transition group">
+ <span class="font-bold text-primary block">Admin Dashboard</span>
+ <span class="text-gray-500 text-[11px] block mt-0.5">System-wide operational oversight</span>
+ </a>
+ <a href="dashboard-manager.html" class="block p-3 alt-c3 hover:bg-purple-50 transition group">
+ <span class="font-bold text-primary block">Hub Operations</span>
+ <span class="text-gray-500 text-[11px] block mt-0.5">Hub management &amp; dispatches</span>
+ </a>
+ <a href="dashboard-dispatcher.html" class="block p-3 hover:bg-purple-50 transition group">
+ <span class="font-bold text-primary block">Dispatch Board</span>
+ <span class="text-gray-500 text-[11px] block mt-0.5">Live order dispatches &amp; assignments</span>
+ </a>
+ <a href="dashboard-driver.html" class="block p-3 alt-c3 hover:bg-purple-50 transition group">
+ <span class="font-bold text-primary block">Driver Runsheets</span>
+ <span class="text-gray-500 text-[11px] block mt-0.5">Daily delivery stops &amp; cash collection</span>
+ </a>
+ <a href="dashboard-customer.html" class="block p-3 hover:bg-purple-50 transition group">
+ <span class="font-bold text-primary block">Customer Tracking</span>
+ <span class="text-gray-500 text-[11px] block mt-0.5">Real-time consignment tracking</span>
+ </a>
+ </div>
+ </div>
+
+ <!-- Column 4: Reports -->
+ <div class="bg-white border-2 col-c4 rounded-xl overflow-hidden shadow-sm flex flex-col">
+ <div class="hdr-c4 text-white py-2 px-3 text-xs font-extrabold uppercase tracking-wider flex items-center justify-between">
+ <span>Reports</span>
+ <span class="opacity-80 text-[10px]">Analytics</span>
+ </div>
+ <div class="divide-y divide-gray-100 flex-1 text-xs">
+ <a href="reports.html" class="block p-3 hover:bg-amber-50 transition group">
+ <span class="font-bold text-amber-950 group-hover:text-amber-700 block">Order Pipeline</span>
+ <span class="text-gray-500 text-[11px] block mt-0.5">Order pipeline status summary</span>
+ </a>
+ <a href="reports.html" class="block p-3 alt-c4 hover:bg-amber-50 transition group">
+ <span class="font-bold text-amber-950 group-hover:text-amber-700 block">Overdue Orders</span>
+ <span class="text-gray-500 text-[11px] block mt-0.5">Delayed delivery tracking</span>
+ </a>
+ <a href="reports.html" class="block p-3 hover:bg-amber-50 transition group">
+ <span class="font-bold text-amber-950 group-hover:text-amber-700 block">Driver Performance</span>
+ <span class="text-gray-500 text-[11px] block mt-0.5">Completion rates &amp; collections</span>
+ </a>
+ <a href="reports.html" class="block p-3 alt-c4 hover:bg-amber-50 transition group">
+ <span class="font-bold text-amber-950 group-hover:text-amber-700 block">Vehicle Utilization</span>
+ <span class="text-gray-500 text-[11px] block mt-0.5">Fleet capacity utilization</span>
+ </a>
+ </div>
+ </div>
+
+ <!-- Column 5: System -->
+ <div class="bg-white border-2 col-c5 rounded-xl overflow-hidden shadow-sm flex flex-col">
+ <div class="hdr-c5 text-white py-2 px-3 text-xs font-extrabold uppercase tracking-wider flex items-center justify-between">
+ <span>System</span>
+ <span class="opacity-80 text-[10px]">Overview</span>
+ </div>
+ <div class="divide-y divide-gray-100 flex-1 text-xs">
+ <a href="/api-docs" target="_blank" class="block p-3 hover:bg-teal-50 transition group">
+ <span class="font-bold text-teal-950 group-hover:text-teal-700 block">API Gateway</span>
+ <span class="text-gray-500 text-[11px] block mt-0.5">REST API Documentation &amp; Endpoints</span>
+ </a>
+ <div class="p-3 alt-c5">
+ <span class="font-bold text-teal-950 block">Role-Based Access</span>
+ <span class="text-gray-500 text-[11px] block mt-0.5">Admin, Hub Manager, Dispatcher, Driver</span>
+ </div>
+ <div class="p-3">
+ <span class="font-bold text-teal-950 block">Hub Distribution Network</span>
+ <span class="text-gray-500 text-[11px] block mt-0.5">Regional hubs &amp; service zones</span>
+ </div>
+ <div class="p-3 alt-c5">
+ <span class="font-bold text-teal-950 block">Automated Dispatch</span>
+ <span class="text-gray-500 text-[11px] block mt-0.5">Auto-assign algorithm &amp; load balancing</span>
+ </div>
+ </div>
+ </div>
+
+ </div>
+ </div>
+
+ <!-- Footer -->
+ <footer class="mt-8 text-center text-xs text-gray-400">
+ Logistic and Dispatch Management System • Operations &amp; Dispatch Hub
+ </footer>
+
+</body>
+</html>

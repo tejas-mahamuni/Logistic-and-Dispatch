@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Customer Master Entry - Logistic & Dispatch v2</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        colors: {
+                            primary: '#6003f4',
+                            'primary-soft': '#9069fc',
+                            surface: '#ffffff',
+                            ink: '#131312',
+                            'ink-muted': '#515150',
+                            accent: '#ccee37',
+                            danger: '#b90101',
+                            success: '#019340',
+                            warning: '#f25e25',
+                        }
+                    }
+                }
+            }
+        </script>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+            body {
+                font-family: 'Inter', sans-serif;
+                background-color: #f7f6fa;
+            }
+
+            .times-heading {
+                font-family: 'Times New Roman', Times, serif;
+                font-style: italic;
+            }
+        </style>
+    </head>
+
+    <body class="min-h-screen flex items-center justify-center p-4">
+
+        <div class="w-full max-w-4xl bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            <!-- Top App Header -->
+            <div class="bg-primary text-white text-center py-4 px-6">
+                <h1 class="text-xl md:text-2xl font-bold tracking-tight times-heading">Logistic and Dispatch Management
+                    System</h1>
+                <p class="text-xs uppercase tracking-widest text-purple-200 font-semibold mt-1">Pune Regional Operations
+                </p>
+            </div>
+
+            <!-- Form Title Banner -->
+            <div class="bg-purple-50 border-b border-purple-100 py-3 px-8 flex justify-between items-center">
+                <div class="flex items-center gap-2.5">
+
+                    <h2 class="text-lg font-bold text-primary">Customer Master Entry</h2>
+                </div>
+                <span id="mode-badge"
+                    class="px-3 py-1 text-xs font-semibold rounded-full bg-purple-100 text-primary border border-purple-200">
+                    Mode: Find
+                </span>
+            </div>
+
+            <!-- Form Body -->
+            <form id="customer-form" class="p-8 space-y-6">
+                <!-- Mode & ID Field -->
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-5">
+                    <div class="flex flex-wrap items-center gap-4">
+                        <label for="customerId" class="w-36 text-sm font-bold text-gray-700">
+                            Customer ID: <span class="text-danger">*</span>
+                        </label>
+                        <div class="flex items-center gap-3">
+                            <input type="number" id="customerId"
+                                class="w-28 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-primary focus:outline-none"
+                                placeholder="ID">
+
+                            <!-- Find / New Toggle Pill -->
+                            <div class="inline-flex bg-white border border-gray-300 rounded-full p-1 shadow-inner">
+                                <button type="button" id="btn-mode-find"
+                                    class="px-4 py-1 text-xs font-bold rounded-full bg-primary text-white transition-all">Find</button>
+                                <button type="button" id="btn-mode-new"
+                                    class="px-4 py-1 text-xs font-bold rounded-full text-gray-600 hover:text-primary transition-all">New</button>
+                            </div>
+                        </div>
+                        <button type="button" id="btn-fetch"
+                            class="px-3 py-1.5 text-xs font-semibold bg-white border border-gray-300 rounded-md hover:bg-gray-100 transition">Fetch
+                            Record</button>
+                    </div>
+                    <div id="id-feedback" class="hidden mt-2 text-xs text-danger font-medium"></div>
+                </div>
+
+                <!-- Customer Details Grid -->
+                <div class="space-y-4">
+                    <div class="flex flex-col md:flex-row md:items-center gap-2">
+                        <label for="fullName" class="w-36 text-sm font-bold text-gray-700">
+                            Full Name: <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" id="fullName" required
+                            class="flex-1 max-w-md px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-primary focus:outline-none"
+                            placeholder="e.g. Rahul Sharma">
+                    </div>
+
+                    <div class="flex flex-col md:flex-row md:items-center gap-2">
+                        <label for="phone" class="w-36 text-sm font-bold text-gray-700">
+                            Phone Number: <span class="text-danger">*</span>
+                        </label>
+                        <div class="flex-1 max-w-md">
+                            <div class="flex items-center">
+                                <span
+                                    class="inline-flex items-center px-3 py-2 border border-r-0 border-gray-300 bg-gray-100 text-gray-600 text-sm rounded-l-md font-medium">+91</span>
+                                <input type="text" id="phone" maxlength="10" required
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-r-md text-sm font-mono focus:ring-2 focus:ring-primary focus:outline-none"
+                                    placeholder="9876543210">
+                            </div>
+                            <p id="phone-hint" class="text-xs text-gray-500 mt-1">10-digit mobile number starting with 6, 7, 8, or 9</p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row md:items-center gap-2">
+                        <label for="email" class="w-36 text-sm font-bold text-gray-700">
+                            Email Address:
+                        </label>
+                        <input type="email" id="email"
+                            class="flex-1 max-w-md px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-primary focus:outline-none"
+                            placeholder="customer@example.com">
+                    </div>
+
+                    <div class="flex flex-col md:flex-row md:items-start gap-2">
+                        <label for="addressLine" class="w-36 text-sm font-bold text-gray-700 pt-2">
+                            Delivery Address: <span class="text-danger">*</span>
+                        </label>
+                        <textarea id="addressLine" rows="3" required
+                            class="flex-1 max-w-lg px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-primary focus:outline-none"
+                            placeholder="Flat No., Building Name, Street / Landmark"></textarea>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row md:items-center gap-2">
+                        <label for="pincode" class="w-36 text-sm font-bold text-gray-700">
+                            Pincode: <span class="text-danger">*</span>
+                        </label>
+                        <div class="flex items-center gap-3">
+                            <input type="text" id="pincode" maxlength="6" required
+                                class="w-32 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-primary focus:outline-none"
+                                placeholder="411057">
+                            <span id="zone-hint" class="text-xs text-ink-muted"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Global Alert Container -->
+                <div id="alert-box" class="hidden p-3 rounded-md text-sm font-medium"></div>
+
+                <!-- Action Controls -->
+                <div class="pt-4 border-t border-gray-200 flex flex-wrap justify-between items-center gap-4">
+                    <div class="flex items-center gap-3">
+                        <button type="submit" id="btn-action"
+                            class="px-6 py-2.5 bg-warning text-ink font-bold rounded-lg shadow-sm hover:brightness-105 transition-all text-sm">
+                            Update
+                        </button>
+                        <button type="button" id="btn-clear"
+                            class="px-4 py-2.5 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition text-sm">
+                            Clear
+                        </button>
+                    </div>
+
+                    <!-- Previous / Next Navigation Group -->
+                    <div class="inline-flex rounded-full border border-gray-300 overflow-hidden shadow-sm">
+                        <button type="button" id="btn-prev"
+                            class="px-4 py-2 bg-primary text-white text-xs font-bold flex items-center gap-1.5 hover:bg-primary-soft transition">
+                            Previous
+                        </button>
+                        <div class="w-px bg-purple-400"></div>
+                        <button type="button" id="btn-next"
+                            class="px-4 py-2 bg-primary text-white text-xs font-bold flex items-center gap-1.5 hover:bg-primary-soft transition">
+                            Next
+                        </button>
+                    </div>
+
+                    <a href="index.html"
+                        class="px-5 py-2.5 bg-red-50 text-danger border border-red-200 font-bold rounded-lg hover:bg-red-100 transition text-sm flex items-center gap-1.5">
+                        Exit
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Page Logic Script -->
+        <script type="module">
+            import { CustomerApi } from './js/api.js';
+
+
+            let currentMode = 'find'; // 'find' or 'new'
+
+            const customerIdInput = document.getElementById('customerId');
+            const btnFind = document.getElementById('btn-mode-find');
+            const btnNew = document.getElementById('btn-mode-new');
+            const btnAction = document.getElementById('btn-action');
+            const modeBadge = document.getElementById('mode-badge');
+            const alertBox = document.getElementById('alert-box');
+
+            const fullNameInput = document.getElementById('fullName');
+            const phoneInput = document.getElementById('phone');
+            const emailInput = document.getElementById('email');
+            const addressInput = document.getElementById('addressLine');
+            const pincodeInput = document.getElementById('pincode');
+
+            // Mode toggler
+            btnFind.addEventListener('click', () => setMode('find'));
+            btnNew.addEventListener('click', () => setMode('new'));
+
+            function setMode(mode) {
+                currentMode = mode;
+                hideAlert();
+                if (mode === 'find') {
+                    btnFind.className = 'px-4 py-1 text-xs font-bold rounded-full bg-primary text-white transition-all';
+                    btnNew.className = 'px-4 py-1 text-xs font-bold rounded-full text-gray-600 hover:text-primary transition-all';
+                    btnAction.textContent = 'Update';
+                    btnAction.className = 'px-6 py-2.5 bg-warning text-ink font-bold rounded-lg shadow-sm hover:brightness-105 transition text-sm';
+                    customerIdInput.disabled = false;
+                    customerIdInput.placeholder = 'ID';
+                    modeBadge.textContent = 'Mode: Find';
+                } else {
+                    btnNew.className = 'px-4 py-1 text-xs font-bold rounded-full bg-primary text-white transition-all';
+                    btnFind.className = 'px-4 py-1 text-xs font-bold rounded-full text-gray-600 hover:text-primary transition-all';
+                    btnAction.textContent = 'Save';
+                    btnAction.className = 'px-6 py-2.5 bg-success text-white font-bold rounded-lg shadow-sm hover:brightness-105 transition text-sm';
+                    customerIdInput.value = '';
+                    customerIdInput.disabled = true;
+                    customerIdInput.placeholder = 'Auto';
+                    modeBadge.textContent = 'Mode: New';
+                    clearFields();
+                }
+            }
+
+            // Fetch customer by ID
+            document.getElementById('btn-fetch').addEventListener('click', async () => {
+                const id = customerIdInput.value.trim();
+                if (!id) return showAlert('Please enter a Customer ID to find', 'error');
+                await loadCustomer(id);
+            });
+
+            // Previous button
+            document.getElementById('btn-prev').addEventListener('click', async () => {
+                const id = customerIdInput.value.trim();
+                if (!id) return showAlert('Enter or load a customer ID first', 'error');
+                try {
+                    const data = await CustomerApi.getPrevious(id);
+                    populateForm(data);
+                    showAlert(`Loaded previous customer ID #${data.id}`, 'info');
+                } catch (err) {
+                    showAlert(err.message, 'error');
+                }
+            });
+
+            // Next button
+            document.getElementById('btn-next').addEventListener('click', async () => {
+                const id = customerIdInput.value.trim();
+                if (!id) return showAlert('Enter or load a customer ID first', 'error');
+                try {
+                    const data = await CustomerApi.getNext(id);
+                    populateForm(data);
+                    showAlert(`Loaded next customer ID #${data.id}`, 'info');
+                } catch (err) {
+                    showAlert(err.message, 'error');
+                }
+            });
+
+            // Clear button
+            document.getElementById('btn-clear').addEventListener('click', () => {
+                clearFields();
+                hideAlert();
+            });
+
+            const phoneHint = document.getElementById('phone-hint');
+            const phoneRegex = /^[6-9]\d{9}$/;
+
+            // Real-time phone number sanitization and feedback
+            phoneInput.addEventListener('input', (e) => {
+                e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                const val = e.target.value;
+                if (!val) {
+                    phoneHint.textContent = '10-digit mobile number starting with 6, 7, 8, or 9';
+                    phoneHint.className = 'text-xs text-gray-500 mt-1';
+                } else if (!phoneRegex.test(val)) {
+                    phoneHint.textContent = 'Invalid Mobile Number: Must be 10 digits starting with 6-9';
+                    phoneHint.className = 'text-xs text-danger font-medium mt-1';
+                } else {
+                    phoneHint.textContent = 'Valid 10-digit mobile number';
+                    phoneHint.className = 'text-xs text-success font-medium mt-1';
+                }
+            });
+
+            // Form Submission
+            document.getElementById('customer-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                hideAlert();
+
+                const fullName = fullNameInput.value.trim();
+                const phone = phoneInput.value.trim().replace(/\D/g, '');
+                const addressLine = addressInput.value.trim();
+                const pincode = pincodeInput.value.trim().replace(/\D/g, '');
+
+                if (!fullName) {
+                    showAlert('Please enter customer full name.', 'error');
+                    fullNameInput.focus();
+                    return;
+                }
+
+                if (!phoneRegex.test(phone)) {
+                    showAlert('Invalid Mobile Number: Must be exactly 10 digits starting with 6, 7, 8, or 9 (e.g. 9876543210).', 'error');
+                    phoneInput.focus();
+                    return;
+                }
+
+                if (!addressLine) {
+                    showAlert('Please enter the delivery address.', 'error');
+                    addressInput.focus();
+                    return;
+                }
+
+                if (!/^\d{6}$/.test(pincode)) {
+                    showAlert('Invalid Pincode: Must be exactly 6 digits (e.g. 411057).', 'error');
+                    pincodeInput.focus();
+                    return;
+                }
+
+                const payload = {
+                    fullName: fullName,
+                    phone: phone,
+                    email: emailInput.value.trim() || null,
+                    addressLine: addressLine,
+                    pincode: pincode
+                };
+
+                btnAction.disabled = true;
+
+                try {
+                    if (currentMode === 'new') {
+                        const created = await CustomerApi.create(payload);
+                        populateForm(created);
+                        setMode('find');
+                        showAlert(`Customer created successfully! Assigned Customer ID #${created.id}`, 'success');
+                    } else {
+                        const id = customerIdInput.value.trim();
+                        if (!id) throw new Error('Customer ID is required for updating');
+                        const updated = await CustomerApi.update(id, payload);
+                        populateForm(updated);
+                        showAlert(`Customer ID #${updated.id} updated successfully!`, 'success');
+                    }
+                } catch (err) {
+                    showAlert(err.message, 'error');
+                } finally {
+                    btnAction.disabled = false;
+                }
+            });
+
+            async function loadCustomer(id) {
+                try {
+                    const data = await CustomerApi.get(id);
+                    populateForm(data);
+                    showAlert(`Customer ID #${data.id} loaded.`, 'success');
+                } catch (err) {
+                    showAlert(err.message, 'error');
+                }
+            }
+
+            function populateForm(data) {
+                customerIdInput.value = data.id;
+                fullNameInput.value = data.fullName || '';
+                phoneInput.value = (data.phone || '').replace('+91', '');
+                emailInput.value = data.email || '';
+                addressInput.value = data.addressLine || '';
+                pincodeInput.value = data.pincode || '';
+            }
+
+            function clearFields() {
+                fullNameInput.value = '';
+                phoneInput.value = '';
+                emailInput.value = '';
+                addressInput.value = '';
+                pincodeInput.value = '';
+            }
+
+            function showAlert(msg, type = 'info') {
+                alertBox.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700', 'bg-blue-100', 'text-blue-700');
+                if (type === 'error') {
+                    alertBox.classList.add('bg-red-100', 'text-red-700', 'border', 'border-red-200');
+                } else if (type === 'success') {
+                    alertBox.classList.add('bg-green-100', 'text-green-700', 'border', 'border-green-200');
+                } else {
+                    alertBox.classList.add('bg-blue-100', 'text-blue-700', 'border', 'border-blue-200');
+                }
+                alertBox.textContent = msg;
+            }
+
+            function hideAlert() {
+                alertBox.classList.add('hidden');
+            }
+        </script>
+    </body>
+
+</html>

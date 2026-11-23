@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563EB" />
+      <stop offset="100%" stop-color="#1D4ED8" />
+    </linearGradient>
+  </defs>
+  <!-- Background with smooth rounded corners -->
+  <rect width="64" height="64" rx="14" fill="url(#bgGrad)" />
+  
+  <!-- Fast-moving speed trails behind the truck -->
+  <path d="M6 23h11" stroke="#93C5FD" stroke-width="3" stroke-linecap="round" />
+  <path d="M3 31h13" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" />
+  <path d="M7 39h9" stroke="#93C5FD" stroke-width="3" stroke-linecap="round" />
+  <path d="M11 46h6" stroke="#60A5FA" stroke-width="2.5" stroke-linecap="round" />
+
+  <!-- Fast Moving Truck Body -->
+  <g transform="translate(13, 13)">
+    <!-- Cargo Box -->
+    <path d="M4 9a2 2 0 0 1 2-2h17a2 2 0 0 1 2 2v19a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-2" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" />
+    <!-- Cabin Front -->
+    <path d="M25 15h6.2a1.5 1.5 0 0 1 1.2.6l4.6 6.2a1.5 1.5 0 0 1 .3.9V28a1 1 0 0 1-1 1h-3" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" />
+    <!-- Cabin Window -->
+    <path d="M25 17h5.2l3.4 4.8H25v-4.8z" fill="#93C5FD" opacity="0.9" />
+    <!-- Rear Wheel -->
+    <circle cx="11" cy="29" r="4.2" fill="#1E293B" stroke="#FFFFFF" stroke-width="2.8" />
+    <circle cx="11" cy="29" r="1.3" fill="#FFFFFF" />
+    <!-- Front Wheel -->
+    <circle cx="30" cy="29" r="4.2" fill="#1E293B" stroke="#FFFFFF" stroke-width="2.8" />
+    <circle cx="30" cy="29" r="1.3" fill="#FFFFFF" />
+  </g>
+</svg>

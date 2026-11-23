@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Driver Delivery Portal - Logistic &amp; Dispatch v2</title>
+ <script src="https://cdn.tailwindcss.com"></script>
+ <script>
+ tailwind.config = {
+ theme: {
+ extend: {
+ colors: {
+ primary: '#6003f4',
+ 'primary-soft': '#9069fc',
+ surface: '#ffffff',
+ ink: '#131312',
+ 'ink-muted': '#515150',
+ accent: '#ccee37',
+ danger: '#b90101',
+ success: '#019340',
+ warning: '#f25e25',
+ }
+ }
+ }
+ }
+ </script>
+ <style>
+ @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+ body { font-family: 'Inter', sans-serif; background-color: #f6f7fb; }
+ .times-heading { font-family: 'Times New Roman', Times, serif; font-style: italic; }
+ </style>
+</head>
+<body class="min-h-screen p-4 md:p-6 space-y-6">
+
+ <!-- TopBar matching v1 aesthetic -->
+ <header class="bg-gradient-to-r from-purple-800 to-primary text-white shadow-lg border-b-4 border-purple-400 rounded-xl px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+ <div>
+ <h1 class="text-xl sm:text-2xl font-bold uppercase tracking-wider times-heading">Driver Last-Mile Delivery Portal</h1>
+ <p class="text-xs text-purple-200 mt-1 font-medium">Route Manifest, Customer OTP Verification &amp; Cash Collection</p>
+ </div>
+ <div class="flex items-center gap-4">
+ <!-- Driver Selector -->
+ <div class="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-1.5 border border-purple-300/40">
+
+ <select id="driver-select" class="bg-transparent text-white text-xs font-semibold focus:outline-none">
+ <option value="1" selected class="text-gray-900">Rajesh Shinde (PUN-02 Hinjawadi)</option>
+ <option value="2" class="text-gray-900">Amit Kulkarni (PUN-03 Kothrud)</option>
+ <option value="3" class="text-gray-900">Sachin Patil (PUN-04 Hadapsar)</option>
+ </select>
+ </div>
+
+ <span class="text-xs text-white bg-white/20 font-bold border border-purple-300 rounded-full uppercase px-3 py-1">
+ ROLE: DRIVER
+ </span>
+ <button type="button" id="btn-refresh" class="inline-flex items-center text-xs text-white bg-white/20 font-bold border border-purple-300 rounded-full uppercase px-3 py-1 hover:bg-white/30 transition gap-1.5">
+
+ Refresh
+ </button>
+ <a href="index.html" class="inline-flex items-center text-xs text-white bg-red-600/80 font-bold border border-red-400 rounded-full uppercase px-3 py-1 hover:bg-red-700 transition gap-1">
+
+ Exit
+ </a>
+ </div>
+ </header>
+
+ <!-- KPI Strip -->
+ <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+ <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">
+ <div class="flex items-center justify-between text-gray-500 text-xs font-semibold uppercase">
+ <span>Assigned Stops</span>
+
+ </div>
+ <p id="kpi-total-stops" class="text-2xl font-bold text-ink mt-2">0</p>
+ <span class="text-[11px] text-gray-500 font-medium">Scheduled for today</span>
+ </div>
+
+ <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">
+ <div class="flex items-center justify-between text-gray-500 text-xs font-semibold uppercase">
+ <span>Completed Deliveries</span>
+
+ </div>
+ <p id="kpi-completed-stops" class="text-2xl font-bold text-emerald-600 mt-2">0</p>
+ <span class="text-[11px] text-emerald-500 font-medium">OTP Verified</span>
+ </div>
+
+ <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">
+ <div class="flex items-center justify-between text-gray-500 text-xs font-semibold uppercase">
+ <span>Pending Deliveries</span>
+
+ </div>
+ <p id="kpi-pending-stops" class="text-2xl font-bold text-amber-600 mt-2">0</p>
+ <span class="text-[11px] text-amber-500 font-medium">Remaining on route</span>
+ </div>
+
+ <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">
+ <div class="flex items-center justify-between text-gray-500 text-xs font-semibold uppercase">
+ <span>COD Cash to Collect</span>
+
+ </div>
+ <p id="kpi-cod-cash" class="text-2xl font-bold text-primary mt-2">₹0</p>
+ <span class="text-[11px] text-gray-500 font-medium">Handover at hub check-in</span>
+ </div>
+ </div>
+
+ <!-- Stops Container -->
+ <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm space-y-4">
+ <div class="flex justify-between items-center border-b pb-3">
+ <div>
+ <h2 class="font-bold text-gray-900 flex items-center gap-2">
+
+ Today's Route Manifest
+ </h2>
+ <p class="text-xs text-gray-500 mt-0.5">Deliver stops in sequence, verify customer OTP, and collect COD payments</p>
+ </div>
+ <span id="trip-badge" class="px-3 py-1 bg-purple-100 text-primary font-bold text-xs rounded-full">
+ Trip: Loading...
+ </span>
+ </div>
+
+ <!-- Stop Cards List -->
+ <div id="stops-container" class="space-y-4">
+ <div class="p-8 text-center text-gray-400 text-xs">Loading driver trips...</div>
+ </div>
+ </div>
+
+ <!-- OTP Verification Modal -->
+ <div id="otp-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+ <div class="bg-white rounded-xl max-w-sm w-full p-6 space-y-4 shadow-xl border">
+ <div class="flex items-center justify-between border-b pb-3">
+ <h3 class="font-bold text-gray-900 flex items-center gap-2 text-sm">
+
+ Customer Delivery Verification
+ </h3>
+ <button type="button" id="modal-close" class="text-gray-400 hover:text-gray-600">
+
+ </button>
+ </div>
+ <div class="space-y-3">
+ <p class="text-xs text-gray-600">Ask the customer for their 4-digit or 6-digit delivery OTP sent via SMS:</p>
+ <div>
+ <label class="block text-[11px] font-bold text-gray-700 uppercase">Customer OTP</label>
+ <input type="text" id="modal-otp-input" placeholder="e.g. 5839" maxlength="6" class="w-full text-center tracking-widest text-lg font-bold border rounded-lg py-2 focus:ring-2 focus:ring-green-500 focus:outline-none">
+ </div>
+ <div id="modal-cod-alert" class="p-3 bg-amber-50 border border-amber-200 rounded-lg hidden">
+ <p class="text-xs font-bold text-amber-900 flex items-center gap-1.5">
+
+ Collect Cash on Delivery: <span id="modal-cod-amount" class="text-primary font-black">₹0</span>
+ </p>
+ </div>
+ </div>
+ <div class="flex gap-2 pt-2">
+ <button type="button" id="modal-confirm-delivery" class="flex-1 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-bold transition">
+ Confirm Delivery
+ </button>
+ <button type="button" id="modal-cancel" class="px-4 py-2 border rounded-lg text-xs font-semibold text-gray-600 hover:bg-gray-50 transition">
+ Cancel
+ </button>
+ </div>
+ </div>
+ </div>
+
+ <script type="module">
+ import { AssignmentApi, OrderApi, DriverApi } from './js/api.js';
+
+ const driverSelect = document.getElementById('driver-select');
+ const stopsContainer = document.getElementById('stops-container');
+ const tripBadge = document.getElementById('trip-badge');
+ const btnRefresh = document.getElementById('btn-refresh');
+
+ // Modal elements
+ const otpModal = document.getElementById('otp-modal');
+ const modalClose = document.getElementById('modal-close');
+ const modalCancel = document.getElementById('modal-cancel');
+ const modalConfirm = document.getElementById('modal-confirm-delivery');
+ const modalOtpInput = document.getElementById('modal-otp-input');
+ const modalCodAlert = document.getElementById('modal-cod-alert');
+ const modalCodAmount = document.getElementById('modal-cod-amount');
+
+ let activeTrip = null;
+ let activeSelectedOrder = null;
+
+ async function initDrivers() {
+   try {
+     const rawUser = sessionStorage.getItem('user') || localStorage.getItem('user');
+     const currentUser = rawUser ? JSON.parse(rawUser) : null;
+     const list = await DriverApi.list();
+     const drivers = Array.isArray(list) ? list : (list?.content || []);
+
+     driverSelect.innerHTML = '';
+     if (drivers.length === 0) {
+       driverSelect.innerHTML = '<option value="">No drivers found</option>';
+       return;
+     }
+
+     let matchedDriverId = null;
+     if (currentUser && currentUser.role === 'DRIVER') {
+       const uid = currentUser.userId || currentUser.id;
+       const matched = drivers.find(d => 
+         (uid && String(d.userId) === String(uid)) ||
+         (currentUser.username && d.username === currentUser.username) ||
+         (d.phone && currentUser.username && (d.phone === currentUser.username || d.phone.endsWith(currentUser.username)))
+       );
+       if (matched) {
+         matchedDriverId = matched.id;
+       }
+     }
+
+     drivers.forEach(d => {
+       const opt = document.createElement('option');
+       opt.value = d.id;
+       opt.className = 'text-gray-900';
+       opt.textContent = `${d.driverName || d.fullName} (${d.hubName || `Hub #${d.hubId}`})`;
+       driverSelect.appendChild(opt);
+     });
+
+     if (matchedDriverId) {
+       driverSelect.value = matchedDriverId;
+       driverSelect.disabled = true;
+     } else if (drivers.length > 0) {
+       driverSelect.value = drivers[0].id;
+     }
+   } catch (e) {
+     console.error('Failed to init drivers dropdown:', e);
+   }
+ }
+
+ async function loadDriverPortal() {
+ const driverId = driverSelect.value;
+ if (!driverId) {
+   stopsContainer.innerHTML = `
+     <div class="p-8 text-center text-gray-400 space-y-2">
+       <p class="text-xs">No driver selected or no driver profile linked to this account.</p>
+     </div>
+   `;
+   tripBadge.innerText = 'No Active Trip';
+   updateKpis(0, 0, 0, 0);
+   return;
+ }
+ try {
+ const trips = await AssignmentApi.getDriverToday(driverId).catch(() => []);
+
+ if (!trips || trips.length === 0) {
+ stopsContainer.innerHTML = `
+ <div class="p-8 text-center text-gray-400 space-y-2">
+
+ <p class="text-xs">No active trip assigned to you for today yet.</p>
+ <p class="text-[11px] text-gray-400">Please check with your Hub Dispatcher or Manager.</p>
+ </div>
+ `;
+ tripBadge.innerText = 'No Active Trip';
+ updateKpis(0, 0, 0, 0);
+ return;
+ }
+
+ activeTrip = trips[0];
+ tripBadge.innerText = `Trip: ${activeTrip.tripCode} (${activeTrip.status})`;
+
+ const orders = activeTrip.orders || [];
+ let deliveredCount = 0;
+ let pendingCount = 0;
+ let codTotal = 0;
+
+ orders.forEach(o => {
+ if (o.status === 'DELIVERED') deliveredCount++;
+ else pendingCount++;
+ });
+
+ updateKpis(orders.length, deliveredCount, pendingCount, codTotal);
+
+ // Render stops
+ stopsContainer.innerHTML = orders.map((o, idx) => {
+ const isDelivered = o.status === 'DELIVERED';
+ const isFailed = o.status === 'FAILED_DELIVERY';
+
+ return `
+ <div class="border rounded-xl p-4 ${isDelivered ? 'bg-green-50/50 border-green-200' : 'bg-white border-gray-200'} shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+ <div class="flex items-start gap-3">
+ <span class="w-8 h-8 rounded-full ${isDelivered ? 'bg-green-600 text-white' : 'bg-primary text-white'} flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
+ ${idx + 1}
+ </span>
+ <div>
+ <div class="flex items-center gap-2">
+ <h3 class="font-bold text-gray-900 text-sm">${o.recipientName}</h3>
+ <span class="font-mono text-xs text-primary font-bold">(${o.trackingNo})</span>
+ <span class="text-[10px] px-2 py-0.5 rounded font-bold ${isDelivered ? 'bg-green-100 text-green-800' : isFailed ? 'bg-rose-100 text-rose-800' : 'bg-yellow-100 text-yellow-800'}">
+ ${o.status || 'PENDING'}
+ </span>
+ </div>
+ <p class="text-xs text-gray-600 mt-1 flex items-center gap-1">
+
+ <a href="tel:${o.recipientPhone}" class="hover:underline font-semibold text-gray-800">${o.recipientPhone}</a>
+ <span class="mx-1 text-gray-300">•</span>
+
+ Pincode: <span class="font-semibold text-gray-800">${o.deliveryPincode}</span>
+ </p>
+ </div>
+ </div>
+
+ <div class="flex items-center gap-2 w-full md:w-auto justify-end">
+ ${isDelivered ? `
+ <span class="inline-flex items-center gap-1.5 text-xs text-green-700 font-bold bg-green-100 px-3 py-1.5 rounded-lg">
+ Delivered
+ </span>
+ ` : `
+ <button data-order-id="${o.orderId}" class="btn-deliver px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-lg shadow-sm transition inline-flex items-center gap-1">
+ Deliver (OTP)
+ </button>
+ <button data-order-id="${o.orderId}" class="btn-fail px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold rounded-lg transition inline-flex items-center gap-1">
+ Failed
+ </button>
+ `}
+ </div>
+ </div>
+ `;
+ }).join('');
+
+ // Bind deliver buttons
+ document.querySelectorAll('.btn-deliver').forEach(btn => {
+ btn.addEventListener('click', (e) => {
+ const orderId = e.currentTarget.getAttribute('data-order-id');
+ activeSelectedOrder = orders.find(o => o.orderId == orderId);
+ if (activeSelectedOrder) {
+ modalOtpInput.value = '';
+ otpModal.classList.remove('hidden');
+ modalOtpInput.focus();
+ }
+ });
+ });
+
+ // Bind fail buttons
+ document.querySelectorAll('.btn-fail').forEach(btn => {
+ btn.addEventListener('click', async (e) => {
+ const orderId = e.currentTarget.getAttribute('data-order-id');
+ const reason = prompt('Please select or enter reason for failed delivery (e.g. Customer Not Available, Incomplete Address, Rejected):', 'Customer Not Available');
+ if (reason) {
+ try {
+ await OrderApi.updateStatus(orderId, 'FAILED_DELIVERY');
+ alert('Stop marked as Failed Delivery.');
+ loadDriverPortal();
+ } catch (err) {
+ alert('Error: ' + err.message);
+ }
+ }
+ });
+ });
+
+ } catch (err) {
+ console.error(err);
+ }
+ }
+
+ function updateKpis(total, comp, pend, cod) {
+ document.getElementById('kpi-total-stops').innerText = total;
+ document.getElementById('kpi-completed-stops').innerText = comp;
+ document.getElementById('kpi-pending-stops').innerText = pend;
+ document.getElementById('kpi-cod-cash').innerText = '₹' + cod;
+ }
+
+ modalConfirm.addEventListener('click', async () => {
+ const otp = modalOtpInput.value.trim();
+ if (!otp || otp.length < 4) {
+ alert('Please enter a valid customer delivery OTP.');
+ return;
+ }
+
+ try {
+ await OrderApi.updateStatus(activeSelectedOrder.orderId, 'DELIVERED');
+ otpModal.classList.add('hidden');
+ alert(`Delivery confirmed for Order ${activeSelectedOrder.trackingNo}!`);
+ loadDriverPortal();
+ } catch (err) {
+ alert('Verification error: ' + err.message);
+ }
+ });
+
+ modalClose.addEventListener('click', () => otpModal.classList.add('hidden'));
+ modalCancel.addEventListener('click', () => otpModal.classList.add('hidden'));
+
+ driverSelect.addEventListener('change', loadDriverPortal);
+ btnRefresh.addEventListener('click', loadDriverPortal);
+
+ window.addEventListener('DOMContentLoaded', async () => {
+   await initDrivers();
+   loadDriverPortal();
+ });
+ </script>
+</body>
+</html>

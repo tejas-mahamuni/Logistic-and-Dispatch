@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "SF Pro", 'Helvetica';
+  --font-sf: 'SF Pro Rounded', 'Helvetica';
+  --font-times: 'Times New Roman', sans-serif;
+}
+
+:root {
+  font-family: var(--font-sans);
+}

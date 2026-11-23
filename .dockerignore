@@ -1,0 +1,13 @@
+.git
+.github
+.vscode
+diagrams
+*.docx
+*.md
+v1/
+Database/
+target/
+node_modules/
+dist/
+start_server.bat
+start_tunnel.bat

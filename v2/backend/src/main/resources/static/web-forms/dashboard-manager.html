@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Hub Manager Dashboard - Logistic &amp; Dispatch v2</title>
+ <script src="https://cdn.tailwindcss.com"></script>
+ <script>
+ tailwind.config = {
+ theme: {
+ extend: {
+ colors: {
+ primary: '#6003f4',
+ 'primary-soft': '#9069fc',
+ surface: '#ffffff',
+ ink: '#131312',
+ 'ink-muted': '#515150',
+ accent: '#ccee37',
+ danger: '#b90101',
+ success: '#019340',
+ warning: '#f25e25',
+ }
+ }
+ }
+ }
+ </script>
+ <style>
+ @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+ body { font-family: 'Inter', sans-serif; background-color: #f6f7fb; }
+ .times-heading { font-family: 'Times New Roman', Times, serif; font-style: italic; }
+ </style>
+</head>
+<body class="min-h-screen p-4 md:p-6 space-y-6">
+
+ <!-- TopBar matching v1 aesthetic -->
+ <header class="bg-gradient-to-r from-purple-800 to-primary text-white shadow-lg border-b-4 border-purple-400 rounded-xl px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+ <div>
+ <h1 class="text-xl sm:text-2xl font-bold uppercase tracking-wider times-heading">Hub Operations &amp; Dispatch Approval</h1>
+ <p class="text-xs text-purple-200 mt-1 font-medium">Daily Inbound/Outbound Control, Fleet Allocation &amp; Trip Sign-off</p>
+ </div>
+ <div class="flex items-center gap-4">
+ <!-- Hub Switcher -->
+ <div class="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-1.5 border border-purple-300/40">
+
+ <select id="hub-filter" class="bg-transparent text-white text-xs font-semibold focus:outline-none">
+ <option value="" class="text-gray-900">Loading hubs...</option>
+ </select>
+ </div>
+
+ <span class="text-xs text-white bg-white/20 font-bold border border-purple-300 rounded-full uppercase px-3 py-1">
+ ROLE: HUB MANAGER
+ </span>
+ <button type="button" id="btn-refresh" class="inline-flex items-center text-xs text-white bg-white/20 font-bold border border-purple-300 rounded-full uppercase px-3 py-1 hover:bg-white/30 transition gap-1.5">
+
+ Refresh
+ </button>
+ <a href="index.html" class="inline-flex items-center text-xs text-white bg-red-600/80 font-bold border border-red-400 rounded-full uppercase px-3 py-1 hover:bg-red-700 transition gap-1">
+
+ Exit
+ </a>
+ </div>
+ </header>
+
+ <!-- KPI Strip -->
+ <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+ <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">
+ <div class="flex items-center justify-between text-gray-500 text-xs font-semibold uppercase">
+ <span>Hub Orders</span>
+
+ </div>
+ <p id="kpi-orders" class="text-2xl font-bold text-ink mt-2">Loading...</p>
+ <span class="text-[11px] text-purple-600 font-medium">Inbound &amp; Queued</span>
+ </div>
+
+ <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">
+ <div class="flex items-center justify-between text-gray-500 text-xs font-semibold uppercase">
+ <span>Rostered Drivers</span>
+
+ </div>
+ <p id="kpi-drivers" class="text-2xl font-bold text-ink mt-2">Loading...</p>
+ <span class="text-[11px] text-green-600 font-medium">On-duty at Hub</span>
+ </div>
+
+ <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">
+ <div class="flex items-center justify-between text-gray-500 text-xs font-semibold uppercase">
+ <span>Assigned Fleet</span>
+
+ </div>
+ <p id="kpi-vehicles" class="text-2xl font-bold text-ink mt-2">Loading...</p>
+ <span class="text-[11px] text-gray-500 font-medium">Ready for dispatch</span>
+ </div>
+
+ <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition">
+ <div class="flex items-center justify-between text-gray-500 text-xs font-semibold uppercase">
+ <span>Planned Trips</span>
+
+ </div>
+ <p id="kpi-trips" class="text-2xl font-bold text-primary mt-2">Loading...</p>
+ <span class="text-[11px] text-amber-600 font-medium">Awaiting Manager Sign-off</span>
+ </div>
+ </div>
+
+ <!-- Main Content: Planned Trips & Pending Orders -->
+ <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+ <!-- Left: Planned Trips for Approval (Span 2) -->
+ <div class="lg:col-span-2 bg-white border border-gray-200 rounded-xl p-5 shadow-sm space-y-4">
+ <div class="flex justify-between items-center border-b pb-3">
+ <div>
+ <h2 class="font-bold text-gray-900 flex items-center gap-2">
+
+ Trip Plans &amp; Dispatch Approvals
+ </h2>
+ <p class="text-xs text-gray-500 mt-0.5">Review route weight, stop counts, and approve trips for driver dispatch</p>
+ </div>
+ <a href="dispatch-assignment.html" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded-lg text-xs font-semibold hover:bg-purple-700 transition">
+
+ Build New Trip
+ </a>
+ </div>
+
+ <div class="overflow-x-auto">
+ <table class="w-full text-xs text-left">
+ <thead class="bg-gray-50 text-gray-700 font-bold border-b">
+ <tr>
+ <th class="p-3">Trip Code</th>
+ <th class="p-3">Date</th>
+ <th class="p-3">Driver</th>
+ <th class="p-3">Vehicle</th>
+ <th class="p-3 text-center">Stops</th>
+ <th class="p-3">Load (g)</th>
+ <th class="p-3">Status</th>
+ <th class="p-3 text-right">Action</th>
+ </tr>
+ </thead>
+ <tbody id="trips-table-body" class="divide-y divide-gray-100">
+ <tr><td colspan="8" class="p-4 text-center text-gray-400">Loading trip plans...</td></tr>
+ </tbody>
+ </table>
+ </div>
+ </div>
+
+ <!-- Right: Unassigned Orders Ready for Dispatch (Span 1) -->
+ <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm space-y-4">
+ <div class="flex justify-between items-center border-b pb-3">
+ <div>
+ <h2 class="font-bold text-gray-900 flex items-center gap-2">
+
+ Inbound Orders
+ </h2>
+ <p class="text-xs text-gray-500 mt-0.5">Queued at this hub</p>
+ </div>
+ <a href="dispatch-order.html" class="text-xs text-primary font-bold hover:underline">Intake +</a>
+ </div>
+
+ <div id="unassigned-orders-list" class="space-y-2.5 max-h-[500px] overflow-y-auto pr-1">
+ <div class="p-4 text-center text-xs text-gray-400">Loading orders...</div>
+ </div>
+ </div>
+
+ </div>
+
+ <script type="module">
+ import { OrderApi, DriverApi, VehicleApi, AssignmentApi, HubApi } from './js/api.js';
+
+ const hubSelect = document.getElementById('hub-filter');
+ const tripsTableBody = document.getElementById('trips-table-body');
+ const ordersList = document.getElementById('unassigned-orders-list');
+ const btnRefresh = document.getElementById('btn-refresh');
+
+ async function initHubs() {
+ try {
+ const hubs = await HubApi.list();
+ hubSelect.innerHTML = '<option value="" class="text-gray-900">All Pune Hubs</option>' +
+ hubs.map(h => `<option value="${h.id}" class="text-gray-900">${h.code} (${h.name})</option>`).join('');
+ if (hubs.length > 1) {
+ hubSelect.value = hubs[1].id; // Default to first last-mile hub (e.g. Hinjawadi)
+ }
+ } catch (err) {
+ console.error('Failed to load hubs:', err);
+ hubSelect.innerHTML = '<option value="" class="text-gray-900">All Pune Hubs</option>';
+ }
+ }
+
+ async function loadDashboard() {
+ const hubId = hubSelect.value;
+
+ try {
+ // Fetch stats concurrently
+ const [ordersRes, driversRes, vehiclesRes, assignmentsRes] = await Promise.all([
+ OrderApi.list(hubId).catch(() => ({ content: [] })),
+ DriverApi.list(hubId).catch(() => []),
+ VehicleApi.list(hubId).catch(() => []),
+ AssignmentApi.list(hubId).catch(() => ({ content: [] }))
+ ]);
+
+ const orders = ordersRes.content || [];
+ const drivers = driversRes || [];
+ const vehicles = vehiclesRes || [];
+ const assignments = assignmentsRes.content || [];
+
+ // Update KPIs
+ document.getElementById('kpi-orders').innerText = orders.length;
+ document.getElementById('kpi-drivers').innerText = drivers.length;
+ document.getElementById('kpi-vehicles').innerText = vehicles.length;
+ document.getElementById('kpi-trips').innerText = assignments.length;
+
+ // Render Trips Table
+ if (assignments.length === 0) {
+ tripsTableBody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-gray-400">No trips planned for this hub yet. Click "Build New Trip" above.</td></tr>`;
+ } else {
+ tripsTableBody.innerHTML = assignments.map(t => {
+ const isPlanned = t.status === 'PLANNED';
+ const statusBadge = isPlanned 
+ ? `<span class="px-2 py-0.5 bg-amber-100 text-amber-800 rounded font-semibold text-[10px]">PLANNED</span>`
+ : t.status === 'IN_TRANSIT'
+ ? `<span class="px-2 py-0.5 bg-blue-100 text-blue-800 rounded font-semibold text-[10px]">IN_TRANSIT</span>`
+ : `<span class="px-2 py-0.5 bg-green-100 text-green-800 rounded font-semibold text-[10px]">${t.status}</span>`;
+
+ const actionBtn = isPlanned
+ ? `<button data-trip-id="${t.tripId}" class="btn-approve px-2.5 py-1 bg-green-600 hover:bg-green-700 text-white font-semibold rounded text-[11px] shadow-sm transition">Approve &amp; Dispatch</button>`
+ : `<span class="text-gray-400 font-medium text-[11px]">Approved</span>`;
+
+ return `
+ <tr class="hover:bg-gray-50 transition">
+ <td class="p-3 font-bold text-primary">${t.tripCode}</td>
+ <td class="p-3 text-gray-600">${t.tripDate}</td>
+ <td class="p-3 font-medium">${t.driverName || 'Unassigned'}</td>
+ <td class="p-3 font-mono text-[11px]">${t.vehicleRegistrationNo || '—'}</td>
+ <td class="p-3 text-center font-bold">${t.stopCount}</td>
+ <td class="p-3 text-gray-600">${t.totalWeightG ? (t.totalWeightG / 1000).toFixed(1) + ' kg' : '0 kg'}</td>
+ <td class="p-3">${statusBadge}</td>
+ <td class="p-3 text-right">${actionBtn}</td>
+ </tr>
+ `;
+ }).join('');
+ }
+
+ // Render Unassigned Orders
+ if (orders.length === 0) {
+ ordersList.innerHTML = `<p class="text-xs text-gray-400 text-center py-4">No orders currently queued at this hub.</p>`;
+ } else {
+ ordersList.innerHTML = orders.map(o => `
+ <div class="p-3 border rounded-lg bg-gray-50 hover:bg-purple-50 transition flex justify-between items-center">
+ <div>
+ <span class="font-bold text-xs text-primary">${o.trackingNo}</span>
+ <p class="text-[11px] text-gray-700 font-medium mt-0.5">${o.recipientName} (${o.deliveryPincode})</p>
+ <span class="text-[10px] text-gray-500">${o.paymentMode} • ${o.priority}</span>
+ </div>
+ <span class="px-2 py-0.5 text-[10px] font-bold rounded ${o.currentStatus === 'CREATED' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-200 text-gray-700'}">
+ ${o.currentStatus}
+ </span>
+ </div>
+ `).join('');
+ }
+
+ // Bind approval buttons
+ document.querySelectorAll('.btn-approve').forEach(btn => {
+ btn.addEventListener('click', async (e) => {
+ const tripId = e.target.getAttribute('data-trip-id');
+ if (confirm(`Approve Trip #${tripId} and transition status to IN_TRANSIT for driver dispatch?`)) {
+ try {
+ await AssignmentApi.updateTripStatus(tripId, 'IN_TRANSIT');
+ alert('Trip approved successfully!');
+ loadDashboard();
+ } catch (err) {
+ alert('Error approving trip: ' + err.message);
+ }
+ }
+ });
+ });
+
+ } catch (err) {
+ console.error(err);
+ }
+ }
+
+ hubSelect.addEventListener('change', loadDashboard);
+ btnRefresh.addEventListener('click', loadDashboard);
+ window.addEventListener('DOMContentLoaded', async () => {
+ await initHubs();
+ loadDashboard();
+ });
+ </script>
+</body>
+</html>

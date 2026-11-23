@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dispatch Assignment Entry - Logistic &amp; Dispatch</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#6003f4',
+            'primary-soft': '#9069fc',
+            surface: '#ffffff',
+            ink: '#131312',
+            'ink-muted': '#515150',
+            accent: '#ccee37',
+            danger: '#b90101',
+            success: '#019340',
+            warning: '#f25e25',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; background-color: #f7f6fa; }
+    .times-heading { font-family: 'Times New Roman', Times, serif; font-style: italic; }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+  <div class="w-full max-w-5xl bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+    <!-- Top Header -->
+    <div class="bg-primary text-white text-center py-4 px-6">
+      <h1 class="text-xl md:text-2xl font-bold tracking-tight times-heading">Logistic and Dispatch Management System</h1>
+      <p class="text-xs uppercase tracking-widest text-purple-200 font-semibold mt-1">Dispatch Assignment &amp; Route Allocation</p>
+    </div>
+
+    <!-- Form Title Banner -->
+    <div class="bg-purple-50 border-b border-purple-100 py-3 px-8 flex flex-wrap justify-between items-center gap-3">
+      <div class="flex items-center gap-3">
+        <h2 class="text-lg font-bold text-primary">Dispatch Assignment Entry</h2>
+        <span id="assign-badge" class="hidden px-2.5 py-0.5 text-xs font-mono font-bold bg-white border border-primary text-primary rounded"></span>
+      </div>
+      
+      <div class="flex items-center gap-3">
+        <button type="button" id="btn-auto-assign" class="px-3.5 py-1 text-xs font-bold rounded-lg bg-teal-600 hover:bg-teal-700 text-white shadow-sm transition flex items-center gap-1">
+          Auto-Assign Orders
+        </button>
+        <span id="mode-badge" class="px-3 py-1 text-xs font-semibold rounded-full bg-purple-100 text-primary border border-purple-200">
+          Mode: Find
+        </span>
+      </div>
+    </div>
+
+    <!-- Form Body -->
+    <form id="assignment-form" class="p-8 space-y-6">
+      <!-- Mode & ID Field with Operating Hub Selector -->
+      <div class="bg-gray-50 border border-gray-200 rounded-lg p-5">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-4">
+            <label for="assignmentId" class="w-36 text-sm font-bold text-gray-700">
+              Assignment ID: <span class="text-danger">*</span>
+            </label>
+            <div class="flex items-center gap-3">
+              <input type="number" id="assignmentId" class="w-28 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-primary focus:outline-none" placeholder="ID">
+
+              <!-- Find / New Toggle Pill -->
+              <div class="inline-flex bg-white border border-gray-300 rounded-full p-1 shadow-inner">
+                <button type="button" id="btn-mode-find" class="px-4 py-1 text-xs font-bold rounded-full bg-primary text-white transition-all">Find</button>
+                <button type="button" id="btn-mode-new" class="px-4 py-1 text-xs font-bold rounded-full text-gray-600 hover:text-primary transition-all">New</button>
+              </div>
+            </div>
+            <button type="button" id="btn-fetch" class="px-3 py-1.5 text-xs font-semibold bg-white border border-gray-300 rounded-md hover:bg-gray-100 transition">Fetch Record</button>
+          </div>
+
+          <div class="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-purple-200 shadow-sm">
+            <label for="hubFilter" class="text-xs font-bold text-purple-900">Operating Hub:</label>
+            <select id="hubFilter" class="px-2.5 py-1 border border-gray-300 rounded text-xs font-semibold bg-slate-50 text-gray-800 focus:ring-1 focus:ring-primary focus:outline-none">
+              <option value="2">Hub #2: Hinjawadi Delivery Hub</option>
+              <option value="3">Hub #3: Shivajinagar Delivery Hub</option>
+              <option value="4">Hub #4: Kothrud Delivery Hub</option>
+              <option value="5">Hub #5: Hadapsar Delivery Hub</option>
+              <option value="6">Hub #6: Viman Nagar Delivery Hub</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Two-Column Fields Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Left Column: Order Selection (Strictly Pending Unassigned) -->
+        <div class="space-y-4">
+          <div class="flex items-center justify-between border-b pb-1">
+            <h3 class="text-xs uppercase font-bold text-ink-muted tracking-wider">Pending Order Intake Selection</h3>
+            <span id="order-count-badge" class="text-[11px] font-semibold text-slate-500"></span>
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label for="orderId" class="text-xs font-bold text-gray-700">Pending Order: <span class="text-danger">*</span></label>
+            <select id="orderId" required class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-primary focus:outline-none font-medium">
+              <option value="">Loading pending orders...</option>
+            </select>
+            <p id="order-hint" class="text-xs text-gray-500 mt-0.5">Delivered and already-assigned orders are strictly excluded.</p>
+          </div>
+
+          <!-- Selected Order Summary Box -->
+          <div id="order-summary-box" class="hidden p-3.5 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-1.5">
+            <div class="flex justify-between items-center">
+              <span class="font-bold text-slate-800" id="sum-customer">Customer</span>
+              <span id="sum-payment-badge" class="px-2 py-0.5 rounded text-[10px] font-bold">PREPAID</span>
+            </div>
+            <p class="text-slate-600 truncate" id="sum-address">Destination</p>
+            <div class="flex justify-between text-slate-500 pt-1 border-t border-slate-200">
+              <span id="sum-pincode">Pincode: -</span>
+              <span id="sum-amount" class="font-bold text-slate-800">Amount: ₹0</span>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="text-xs font-bold text-gray-700">Status:</label>
+            <input type="text" id="statusDisplay" readonly value="ASSIGNED" class="w-40 px-3 py-2 border border-gray-300 bg-gray-100 rounded-md text-sm font-bold text-primary">
+          </div>
+        </div>
+
+        <!-- Right Column: Driver & Vehicle Allocation -->
+        <div class="space-y-4">
+          <h3 class="text-xs uppercase font-bold text-ink-muted tracking-wider border-b pb-1">Fleet &amp; Driver Allocation</h3>
+
+          <div class="flex flex-col gap-1">
+            <label for="driverId" class="text-xs font-bold text-gray-700">Assigned Driver: <span class="text-danger">*</span></label>
+            <select id="driverId" required class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-primary focus:outline-none">
+              <option value="">Loading drivers...</option>
+            </select>
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label for="vehicleId" class="text-xs font-bold text-gray-700">Assigned Vehicle: <span class="text-danger">*</span></label>
+            <select id="vehicleId" required class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-primary focus:outline-none">
+              <option value="">Loading vehicles...</option>
+            </select>
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label for="remarks" class="text-xs font-bold text-gray-700">Dispatch Remarks / Instructions:</label>
+            <input type="text" id="remarks" placeholder="e.g. Fragile goods / handle with care" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-primary focus:outline-none">
+          </div>
+        </div>
+      </div>
+
+      <!-- Global Alert Container -->
+      <div id="alert-box" class="hidden p-3 rounded-md text-sm font-medium"></div>
+
+      <!-- Action Controls -->
+      <div class="pt-4 border-t border-gray-200 flex flex-wrap justify-between items-center gap-4">
+        <div class="flex items-center gap-3">
+          <button type="submit" id="btn-action" class="px-6 py-2.5 bg-warning text-ink font-bold rounded-lg shadow-sm hover:brightness-105 transition-all text-sm">
+            Update
+          </button>
+          <button type="button" id="btn-clear" class="px-4 py-2.5 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition text-sm">
+            Clear
+          </button>
+        </div>
+
+        <!-- Previous / Next Navigation Group -->
+        <div class="inline-flex rounded-full border border-gray-300 overflow-hidden shadow-sm">
+          <button type="button" id="btn-prev" class="px-4 py-2 bg-primary text-white text-xs font-bold flex items-center gap-1.5 hover:bg-primary-soft transition">
+            Previous
+          </button>
+          <div class="w-px bg-purple-400"></div>
+          <button type="button" id="btn-next" class="px-4 py-2 bg-primary text-white text-xs font-bold flex items-center gap-1.5 hover:bg-primary-soft transition">
+            Next
+          </button>
+        </div>
+
+        <a href="index.html" class="px-5 py-2.5 bg-red-50 text-danger border border-red-200 font-bold rounded-lg hover:bg-red-100 transition text-sm flex items-center gap-1.5">
+          Exit
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Page Logic Script -->
+  <script type="module">
+    import { AssignmentApi, OrderApi, DriverApi, VehicleApi } from './js/api.js';
+
+    let currentMode = 'find';
+    let cachedPendingOrders = [];
+
+    const assignmentIdInput = document.getElementById('assignmentId');
+    const btnFind = document.getElementById('btn-mode-find');
+    const btnNew = document.getElementById('btn-mode-new');
+    const btnAction = document.getElementById('btn-action');
+    const btnAutoAssign = document.getElementById('btn-auto-assign');
+    const modeBadge = document.getElementById('mode-badge');
+    const assignBadge = document.getElementById('assign-badge');
+    const alertBox = document.getElementById('alert-box');
+
+    const orderSelect = document.getElementById('orderId');
+    const driverSelect = document.getElementById('driverId');
+    const vehicleSelect = document.getElementById('vehicleId');
+    const remarksInput = document.getElementById('remarks');
+    const statusDisplay = document.getElementById('statusDisplay');
+    const orderCountBadge = document.getElementById('order-count-badge');
+
+    const orderSummaryBox = document.getElementById('order-summary-box');
+    const sumCustomer = document.getElementById('sum-customer');
+    const sumPaymentBadge = document.getElementById('sum-payment-badge');
+    const sumAddress = document.getElementById('sum-address');
+    const sumPincode = document.getElementById('sum-pincode');
+    const sumAmount = document.getElementById('sum-amount');
+
+    const hubFilter = document.getElementById('hubFilter');
+
+    // Populate dropdowns strictly with orders, drivers, and vehicles for the selected hub
+    async function loadOptions(selectedHubId = '2') {
+      try {
+        const hubId = Number(selectedHubId) || 2;
+        const pending = await OrderApi.getPending(hubId);
+        cachedPendingOrders = pending || [];
+        orderCountBadge.textContent = `${cachedPendingOrders.length} Pending Orders at Hub #${hubId}`;
+
+        orderSelect.innerHTML = '<option value="">-- Select Pending Order --</option>';
+        if (cachedPendingOrders.length === 0) {
+          orderSelect.innerHTML = '<option value="">No pending orders at this hub</option>';
+        }
+        cachedPendingOrders.forEach(o => {
+          const opt = document.createElement('option');
+          opt.value = o.id;
+          const pay = o.paymentMode === 'COD' ? `COD: ₹${o.orderAmount}` : 'PREPAID';
+          opt.textContent = `#${o.id} - ${o.trackingNo} (${o.customerName || 'Customer'}, ${o.destinationPincode}) [${pay}]`;
+          orderSelect.appendChild(opt);
+        });
+
+        // Drivers for this hub
+        const drivers = await DriverApi.list(hubId);
+        driverSelect.innerHTML = '<option value="">-- Select Driver --</option>';
+        const driverList = drivers.content || drivers || [];
+        if (driverList.length === 0) {
+          driverSelect.innerHTML = '<option value="">No active drivers at this hub</option>';
+        }
+        driverList.forEach(d => {
+          const opt = document.createElement('option');
+          opt.value = d.id;
+          opt.textContent = `${d.driverName || d.fullName} (ID: ${d.id}, Lic: ${d.licenseNumber}) - Hub #${d.hubId}`;
+          driverSelect.appendChild(opt);
+        });
+
+        // Vehicles for this hub
+        const vehicles = await VehicleApi.list(hubId);
+        vehicleSelect.innerHTML = '<option value="">-- Select Vehicle --</option>';
+        const vehicleList = vehicles.content || vehicles || [];
+        if (vehicleList.length === 0) {
+          vehicleSelect.innerHTML = '<option value="">No available vehicles at this hub</option>';
+        }
+        vehicleList.forEach(v => {
+          const opt = document.createElement('option');
+          opt.value = v.id;
+          opt.textContent = `${v.registrationNo} (${v.vehicleType}, Cap: ${v.capacityKg}kg) - Hub #${v.hubId}`;
+          vehicleSelect.appendChild(opt);
+        });
+      } catch (err) {
+        console.error('Failed to load dropdown options:', err);
+      }
+    }
+
+    hubFilter.addEventListener('change', () => {
+      loadOptions(hubFilter.value);
+    });
+
+    // Auto-Assign button for current hub
+    btnAutoAssign.addEventListener('click', async () => {
+      try {
+        btnAutoAssign.disabled = true;
+        btnAutoAssign.textContent = 'Auto-Assigning...';
+        const hubId = Number(hubFilter.value) || 2;
+        const res = await AssignmentApi.autoAssign(hubId);
+        await loadOptions(hubId);
+        showAlert(`Successfully auto-assigned ${res?.length || 0} orders for Hub #${hubId}!`, 'success');
+      } catch (err) {
+        showAlert('Auto-assign note: ' + (err.message || 'Complete'), 'info');
+        await loadOptions(hubFilter.value);
+      } finally {
+        btnAutoAssign.disabled = false;
+        btnAutoAssign.textContent = 'Auto-Assign Orders';
+      }
+    });
+
+    loadOptions(hubFilter.value);
+
+    // Order selection change handler to show cash collection / summary
+    orderSelect.addEventListener('change', () => {
+      const selectedId = Number(orderSelect.value);
+      const order = cachedPendingOrders.find(o => o.id === selectedId);
+      if (order) {
+        orderSummaryBox.classList.remove('hidden');
+        sumCustomer.textContent = order.customerName || 'Customer';
+        sumAddress.textContent = order.destinationAddress || '';
+        sumPincode.textContent = `Pincode: ${order.destinationPincode}`;
+        sumAmount.textContent = `Amount: ₹${order.orderAmount || 0}`;
+
+        if (order.paymentMode === 'COD') {
+          sumPaymentBadge.textContent = `COD: Collect ₹${order.orderAmount}`;
+          sumPaymentBadge.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300';
+        } else {
+          sumPaymentBadge.textContent = 'PREPAID: ₹0 to collect';
+          sumPaymentBadge.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-800 border border-green-300';
+        }
+      } else {
+        orderSummaryBox.classList.add('hidden');
+      }
+    });
+
+    // Auto-Assign button handler
+    btnAutoAssign.addEventListener('click', async () => {
+      hideAlert();
+      btnAutoAssign.disabled = true;
+      btnAutoAssign.textContent = 'Running algorithm...';
+      try {
+        const assigned = await AssignmentApi.autoAssign();
+        showAlert(`Successfully auto-assigned ${assigned.length} pending orders to active drivers and fleet!`, 'success');
+        await loadOptions();
+      } catch (err) {
+        showAlert(err.message, 'error');
+      } finally {
+        btnAutoAssign.disabled = false;
+        btnAutoAssign.textContent = 'Auto-Assign Orders';
+      }
+    });
+
+    // Mode toggler
+    btnFind.addEventListener('click', () => setMode('find'));
+    btnNew.addEventListener('click', () => setMode('new'));
+
+    function setMode(mode) {
+      currentMode = mode;
+      hideAlert();
+      if (mode === 'find') {
+        btnFind.className = 'px-4 py-1 text-xs font-bold rounded-full bg-primary text-white transition-all';
+        btnNew.className = 'px-4 py-1 text-xs font-bold rounded-full text-gray-600 hover:text-primary transition-all';
+        btnAction.textContent = 'Update';
+        btnAction.className = 'px-6 py-2.5 bg-warning text-ink font-bold rounded-lg shadow-sm hover:brightness-105 transition text-sm';
+        assignmentIdInput.disabled = false;
+        assignmentIdInput.placeholder = 'ID';
+        modeBadge.textContent = 'Mode: Find';
+      } else {
+        btnNew.className = 'px-4 py-1 text-xs font-bold rounded-full bg-primary text-white transition-all';
+        btnFind.className = 'px-4 py-1 text-xs font-bold rounded-full text-gray-600 hover:text-primary transition-all';
+        btnAction.textContent = 'Save (Assign)';
+        btnAction.className = 'px-6 py-2.5 bg-success text-white font-bold rounded-lg shadow-sm hover:brightness-105 transition text-sm';
+        assignmentIdInput.value = '';
+        assignmentIdInput.disabled = true;
+        assignmentIdInput.placeholder = 'Auto';
+        modeBadge.textContent = 'Mode: New';
+        assignBadge.classList.add('hidden');
+        clearFields();
+      }
+    }
+
+    // Auto-fetch on Assignment ID input without requiring button click
+    let fetchDebounce = null;
+    assignmentIdInput.addEventListener('input', () => {
+      if (currentMode !== 'find') return;
+      const id = assignmentIdInput.value.trim();
+      if (!id) return;
+      clearTimeout(fetchDebounce);
+      fetchDebounce = setTimeout(async () => {
+        await loadAssignment(id);
+      }, 350);
+    });
+
+    // Fetch assignment by ID
+    document.getElementById('btn-fetch').addEventListener('click', async () => {
+      const id = assignmentIdInput.value.trim();
+      if (!id) return showAlert('Please enter an Assignment ID to find', 'error');
+      await loadAssignment(id);
+    });
+
+    // Previous button (seamless navigation in any mode)
+    document.getElementById('btn-prev').addEventListener('click', async () => {
+      if (currentMode === 'new') setMode('find');
+      const id = assignmentIdInput.value.trim() || '999999';
+      try {
+        const data = await AssignmentApi.getPrevious(id);
+        populateForm(data);
+        showAlert(`Loaded assignment ID #${data.id}`, 'info');
+      } catch (err) {
+        showAlert(err.message, 'error');
+      }
+    });
+
+    // Next button (seamless navigation in any mode)
+    document.getElementById('btn-next').addEventListener('click', async () => {
+      if (currentMode === 'new') setMode('find');
+      const id = assignmentIdInput.value.trim() || '0';
+      try {
+        const data = await AssignmentApi.getNext(id);
+        populateForm(data);
+        showAlert(`Loaded assignment ID #${data.id}`, 'info');
+      } catch (err) {
+        showAlert(err.message, 'error');
+      }
+    });
+
+    document.getElementById('btn-clear').addEventListener('click', () => {
+      clearFields();
+      hideAlert();
+    });
+
+    // Form Submit
+    document.getElementById('assignment-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAlert();
+
+      const orderIdVal = Number(orderSelect.value);
+      const driverIdVal = Number(driverSelect.value);
+      const vehicleIdVal = Number(vehicleSelect.value);
+
+      if (!orderIdVal || !driverIdVal || !vehicleIdVal) {
+        return showAlert('Please select Order, Driver, and Vehicle.', 'error');
+      }
+
+      const payload = {
+        orderId: orderIdVal,
+        driverId: driverIdVal,
+        vehicleId: vehicleIdVal,
+        remarks: remarksInput.value.trim()
+      };
+
+      btnAction.disabled = true;
+
+      try {
+        if (currentMode === 'new') {
+          const created = await AssignmentApi.create(payload);
+          populateForm(created);
+          setMode('find');
+          showAlert(`Order assigned to driver #${created.driverName || created.driverId} successfully!`, 'success');
+          await loadOptions();
+        } else {
+          showAlert('Assignment record loaded. To change driver/vehicle, create new assignment.', 'info');
+        }
+      } catch (err) {
+        showAlert(err.message, 'error');
+      } finally {
+        btnAction.disabled = false;
+      }
+    });
+
+    async function loadAssignment(id) {
+      try {
+        const data = await AssignmentApi.get(id);
+        populateForm(data);
+        showAlert(`Assignment ID #${data.id} loaded.`, 'success');
+      } catch (err) {
+        showAlert(err.message, 'error');
+      }
+    }
+
+    function populateForm(data) {
+      assignmentIdInput.value = data.id;
+      driverSelect.value = data.driverId || '';
+      vehicleSelect.value = data.vehicleId || '';
+      remarksInput.value = data.remarks || '';
+      statusDisplay.value = data.status || 'ASSIGNED';
+
+      // Ensure order option exists
+      if (data.orderId) {
+        let opt = orderSelect.querySelector(`option[value="${data.orderId}"]`);
+        if (!opt) {
+          opt = document.createElement('option');
+          opt.value = data.orderId;
+          opt.textContent = `#${data.orderId} - ${data.trackingNo} (${data.customerName || ''}, ${data.destinationPincode || ''})`;
+          orderSelect.appendChild(opt);
+        }
+        orderSelect.value = data.orderId;
+
+        orderSummaryBox.classList.remove('hidden');
+        sumCustomer.textContent = data.customerName || 'Customer';
+        sumAddress.textContent = data.destinationAddress || '';
+        sumPincode.textContent = `Pincode: ${data.destinationPincode || ''}`;
+        sumAmount.textContent = `Amount: ₹${data.orderAmount || 0}`;
+        if (data.paymentMode === 'COD') {
+          sumPaymentBadge.textContent = `COD: Collect ₹${data.orderAmount}`;
+          sumPaymentBadge.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300';
+        } else {
+          sumPaymentBadge.textContent = 'PREPAID: ₹0 to collect';
+          sumPaymentBadge.className = 'px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-800 border border-green-300';
+        }
+      }
+
+      assignBadge.textContent = `Assign #${data.id} - ${data.trackingNo}`;
+      assignBadge.classList.remove('hidden');
+    }
+
+    function clearFields() {
+      orderSelect.value = '';
+      driverSelect.value = '';
+      vehicleSelect.value = '';
+      remarksInput.value = '';
+      statusDisplay.value = 'ASSIGNED';
+      orderSummaryBox.classList.add('hidden');
+      assignBadge.classList.add('hidden');
+    }
+
+    function showAlert(msg, type = 'info') {
+      alertBox.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700', 'bg-blue-100', 'text-blue-700');
+      if (type === 'error') {
+        alertBox.classList.add('bg-red-100', 'text-red-700', 'border', 'border-red-200');
+      } else if (type === 'success') {
+        alertBox.classList.add('bg-green-100', 'text-green-700', 'border', 'border-green-200');
+      } else {
+        alertBox.classList.add('bg-blue-100', 'text-blue-700', 'border', 'border-blue-200');
+      }
+      alertBox.textContent = msg;
+    }
+
+    function hideAlert() {
+      alertBox.classList.add('hidden');
+    }
+  </script>
+</body>
+</html>
